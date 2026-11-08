@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="description" content="Personleg oversikt over forbruket ditt.">
+<title>Min økonomi</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b21;--panel2:#22252d;--line:#30343e;--text:#f4f5f7;--muted:#a4a9b5;--accent:#a78bfa;--green:#62d6a6;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;border:0}
+.app{max-width:760px;margin:auto;padding:22px 16px calc(34px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 0 22px}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#a78bfa,#6d5ce8);display:grid;place-items:center;font-size:22px}
+.title-edit{background:transparent;color:var(--accent);padding:3px 7px;font-size:17px;vertical-align:middle}.title-line{display:flex;align-items:center;gap:5px}h1{font-size:21px;margin:0;letter-spacing:-.4px}.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.pill{font-size:12px;color:#cbbcff;background:#2b2440;border:1px solid #4b3d70;border-radius:99px;padding:6px 10px}
+.hero{background:linear-gradient(135deg,#27213a,#1b1d26 72%);border:1px solid #40365b;border-radius:22px;padding:20px;margin-bottom:20px}
+.eyebrow{font-size:12px;color:#c5b7ec;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.total{font-size:36px;font-weight:750;letter-spacing:-1.5px;margin:5px 0 2px}.hint{font-size:13px;color:var(--muted)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:24px 0 12px}
+h2{font-size:17px;margin:0}.small{font-size:12px;color:var(--muted)}
+.primary{background:var(--accent);color:#171322;border-radius:13px;padding:11px 15px;font-weight:750}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.danger{color:var(--red);background:transparent;padding:7px}
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.account{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:15px;text-align:left;color:var(--text);min-height:112px}
+.account.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.account .emoji{font-size:20px}.account .name{font-weight:700;margin-top:8px}.account .amount{font-size:19px;font-weight:750;margin-top:2px}.account .count{font-size:11px;color:var(--muted)}
+.add-tile{border:1px dashed #555b6a;background:transparent;color:var(--muted);border-radius:17px;min-height:112px;font-weight:650}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+.tabs{display:flex;gap:7px;background:#121318;padding:4px;border-radius:12px}
+.tabs button{flex:1;background:transparent;color:var(--muted);padding:8px 5px;border-radius:9px;font-size:13px}
+.tabs button.active{background:#343044;color:#fff}
+.chart-wrap{height:220px;margin-top:12px;position:relative}canvas{width:100%;height:100%;display:block}
+.legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:12px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+select,input{width:100%;background:#111318;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.transaction{display:flex;align-items:center;gap:11px;padding:13px 0;border-bottom:1px solid var(--line)}
+.transaction:last-child{border-bottom:0}.tx-icon{width:38px;height:38px;border-radius:12px;background:var(--panel2);display:grid;place-items:center}
+.tx-main{flex:1;min-width:0}.tx-title{font-weight:650}.tx-date{font-size:12px;color:var(--muted)}.tx-amount{font-weight:750;white-space:nowrap}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:22px 8px}
+.modal-backdrop{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;justify-content:center;padding:12px;z-index:5}
+.modal-backdrop.show{display:flex}.modal{width:min(100%,520px);background:#1b1d24;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 18px 70px #0009}
+.modal h2{margin-bottom:16px}.field{margin:12px 0}.field label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}.modal-actions{display:flex;gap:9px;margin-top:18px}.modal-actions button{flex:1}
+.month-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px}.month-nav button{min-width:42px}.budget-track{height:11px;background:#333641;border-radius:99px;overflow:hidden;margin:10px 0}.budget-fill{height:100%;background:#62d6a6;border-radius:99px;transition:width .2s}.budget-fill.over{background:#ff8585}.budget-meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}.budget-edit{font-size:12px;color:#cbbcff;background:transparent;padding:5px}.footer{text-align:center;color:#747b89;font-size:11px;margin:25px 0 0}
+@media(min-width:600px){.app{padding-top:32px}.modal-backdrop{align-items:center}.account-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+[hidden]{display:none!important}.main-nav{display:flex;gap:9px;margin:0 0 18px}.main-nav button{flex:1}.main-nav button.active{background:var(--accent);color:#171322;font-weight:750}.salary-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}.salary-summary .panel{margin:0}.salary-value{font-size:21px;font-weight:750;margin-top:7px}.salary-positive{color:var(--green)}.salary-negative{color:var(--red)}.salary-company{font-weight:750}.salary-list .transaction{align-items:flex-start}.salary-list .tx-date{margin-top:3px}
+.main-nav{flex-wrap:wrap}.main-nav button{min-width:95px}.owed-total{font-size:30px;font-weight:800;color:#c6b5ff;margin-top:8px}.owed-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}.owed-item:last-child{border-bottom:0}.owed-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.status-pill{font-size:12px;color:var(--muted)}
+
+/* Liggjande stolpediagram for gjentekne namn under Pengar igjen */
+.owed-chart-row{margin:0 0 17px}.owed-chart-meta{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-size:13px;margin-bottom:7px}.owed-chart-name{font-weight:700;overflow-wrap:anywhere}.owed-chart-amount{font-weight:750;white-space:nowrap;color:#cbbcff}.owed-chart-track{height:16px;background:#30323c;border-radius:999px;overflow:hidden}.owed-chart-fill{height:100%;background:linear-gradient(90deg,#8c71ed,#b69dff);border-radius:999px;min-width:2px}.owed-chart-count{font-size:11px;color:var(--muted);margin-top:4px}
+/* Flytande kalkulator */
+.calc-launch{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:1000;width:58px;height:58px;border-radius:19px;background:#a78bfa;color:#15121e;font-size:29px;box-shadow:0 6px 24px #0009;display:grid;place-items:center}
+.calc-launch-icon{display:block;width:35px;height:43px;object-fit:contain;pointer-events:none}
+.calc-launch:focus-visible,.calc-close:focus-visible,.calc-key:focus-visible{outline:3px solid white;outline-offset:2px}
+.calc-backdrop{position:fixed;inset:0;z-index:1001;background:#000b;display:none;align-items:flex-end;justify-content:center;padding:16px 12px calc(16px + env(safe-area-inset-bottom))}
+.calc-backdrop.open{display:flex}
+.calc-panel{background:#1c1e26;border:1px solid #40404c;border-radius:24px;padding:18px;width:min(100%,380px);box-shadow:0 18px 60px #000b}
+.calc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-weight:750;font-size:19px}
+.calc-close{background:#30333e;color:white;border-radius:12px;padding:7px 13px;font-size:21px}
+.calc-expression{min-height:72px;text-align:right;color:#f5f5f7;font-size:clamp(26px,7vw,42px);padding:16px 5px 8px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;line-height:1.3}.calc-expression .calc-operator{color:#6ed8ce}.calc-expression .calc-cursor{display:inline-block;width:2px;height:1em;background:#6ed8ce;vertical-align:-.14em;margin-left:2px}
+.calc-display{width:100%;background:transparent;color:#a8a9b7;border:0;padding:12px 5px 20px;text-align:right;font-size:26px;min-height:65px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.calc-keys{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:13px}
+.calc-key{border-radius:14px;min-height:60px;background:#31343f;color:#fff;font-size:23px;font-weight:600}
+.calc-key.op{background:#51436f;color:#e5d8ff}.calc-key.equal{background:#a78bfa;color:#171320}.calc-key.clear{background:#55353d;color:#ffd6dd}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+ <div class="brand"><div class="logo">◒</div><div><div class="title-line"><h1 id="appHeading">Min økonomi</h1><button class="title-edit" id="editHeading" type="button" aria-label="Endre overskrift" title="Endre overskrift">✎</button></div><div class="sub">Oversikt over pengane dine</div></div></div>
+ <span class="pill">● Privat</span>
+</header>
+<nav class="main-nav" aria-label="Hovudmeny"><button type="button" class="secondary active" id="expensesTab" aria-selected="true">💳 Utgifter</button><button type="button" class="secondary" id="salaryTab" aria-selected="false">💰 Lønn</button><button type="button" class="secondary" id="owedTab" aria-selected="false">🤝 Pengar igjen</button><button type="button" class="secondary" id="shoppingTab" aria-selected="false">🛒 Handleliste</button></nav>
+<div id="expensesView">
+<div class="month-nav"><button class="secondary" id="prevMonth" aria-label="Førre månad">❮</button><strong id="monthLabel"></strong><button class="secondary" id="nextMonth" aria-label="Neste månad">❯</button></div>
+<section class="hero">
+ <div class="eyebrow">Totalt registrert forbruk</div>
+ <div class="total" id="grandTotal">0 kr</div>
+ <div class="hint" id="totalHint">På tvers av alle kontoane dine</div><div id="overallBudget"></div>
+</section>
+<section id="allExpenseStatsSection" class="panel" aria-label="Samla utgiftsstatistikk" style="margin-top:-8px;margin-bottom:18px">
+ <div class="row"><strong>📊 Samla statistikk – alle kontoar</strong><span class="small" id="allExpenseStatsMonth"></span></div>
+ <p class="small" style="margin:8px 0 12px">Viser alle utgiftene denne månaden, uansett kva konto du har valt.</p>
+ <div class="tabs" role="group" aria-label="Vel diagram" style="margin-bottom:14px">
+  <button id="allStatsBarBtn" type="button" class="active" aria-pressed="true">☰ Liggjande</button>
+  <button id="allStatsVerticalBtn" type="button" aria-pressed="false">▥ Ståande</button>
+  <button id="allStatsPieBtn" type="button" aria-pressed="false">◕ Sektor</button>
+ </div>
+ <div id="allExpenseStats"></div>
+</section>
+
+<div class="section-head"><h2>Mine kontoar</h2><button class="primary" id="newAccountBtn">＋ Opprett konto</button></div>
+<div class="account-grid" id="accounts"></div>
+<div class="section-head"><h2>Budsjett</h2><button class="secondary" id="setBudgetBtn">⚙ Set månadsbudsjett</button></div><section class="panel" id="budgetOverview"></section>
+
+<div id="chartStatsSection" hidden><div class="section-head"><h2 id="chartTitle">Statistikk</h2><span class="small" id="chartSub">Alle kontoar</span></div>
+<section class="panel">
+ <div class="row" style="gap:8px">
+  <div class="tabs" style="flex:1">
+   <button data-chart="bar" class="active">Stolpe</button>
+   <button data-chart="line">Linje</button>
+   <button data-chart="pie">Sektor</button>
+  </div>
+ </div>
+ <div class="chart-wrap"><canvas id="chart"></canvas></div>
+ <div class="legend" id="legend"></div>
+</section></div>
+
+<div id="expenseTypesSection" hidden><div class="section-head"><h2>Mine utgiftstypar</h2><button type="button" class="secondary" id="addExpenseTypeBtn">＋ Legg til type</button></div>
+<section class="panel"><div class="field"><label for="expenseTypeAccount">Vel konto for utgiftstypar</label><select id="expenseTypeAccount"></select></div><div id="expenseTypesList"></div><div id="fixKantinaWrap" style="display:none;margin-top:14px"><button class="secondary" id="fixKantinaBtn" type="button">↪ Flytt Kantina-typar ut av Spel</button><div class="small" style="margin-top:7px">Flyttar berre bagueta, julebrus, monster, Pepsi Max og varm mat til Kantina.</div></div></section>
+</div>
+<div id="shopPresetsSection" hidden>
+<div class="section-head"><h2>Mine butikkar og stader</h2></div>
+<section class="panel">
+
+ <div class="section-head"><h3>Butikkar</h3><button type="button" class="secondary" id="addShopPreset">＋ Legg til butikk</button></div><div id="shopPresetList"></div>
+ <div class="section-head"><h3>Kor ligg butikken?</h3><button type="button" class="secondary" id="addLocationPreset">＋ Legg til stad</button></div><div id="locationPresetList"></div>
+ <p class="small">Kvar konto har sine eigne butikkar og stader. Daglegvarebutikkar og vanlege butikkar blir ikkje blanda.</p>
+</section>
+</div>
+<div id="accountHistorySection" hidden><div class="section-head"><h2 id="historyTitle">Siste registreringar</h2><button class="secondary" id="addAmountBtn">＋ Legg til beløp</button></div>
+<section class="panel" id="history"><div class="empty">Ingen beløp enno. Opprett ein konto og legg til ditt første beløp.</div></section>
+</div>
+<div id="deleteAccountPanel" style="margin-top:28px"><button id="deleteSelectedAccount" type="button" class="danger" style="display:block;width:100%;padding:15px;border-radius:13px">🗑 Slett vald konto</button><p id="deleteAccountHint" class="small" style="text-align:center;margin-top:8px"></p></div>
+
+<p class="footer">Data blir lagra lokalt på denne eininga. Ingen bankkonto er kopla til.</p>
+</div>
+<section id="salaryView" hidden>
+ <div class="month-nav"><button type="button" class="secondary" id="salaryPrev" aria-label="Førre månad">❮</button><strong id="salaryMonthLabel"></strong><button type="button" class="secondary" id="salaryNext" aria-label="Neste månad">❯</button></div>
+ <div class="section-head"><h2>Lønn frå bedrifter</h2></div>
+ <section class="panel"><div class="small">Samla lønn denne månaden</div><div class="salary-value salary-positive" id="salaryTotal">0 kr</div><div class="small" style="margin-top:16px">Samla lønn hittil i <span id="salaryYearLabel"></span></div><div class="salary-value salary-positive" id="salaryYearTotal">0 kr</div><div class="small" style="margin-top:8px">Lønn og utgifter er heilt separate. Du kan rekne sjølv.</div></section>
+ <section class="panel" style="margin-top:14px" aria-label="Frikort-sjekk">
+  <h2 style="margin-top:0">🪪 Frikort-sjekk</h2>
+  <p class="small">Sjekk fødselsåret og kor mykje du har registrert i lønn i år. Frikort har inga øvre aldersgrense.</p>
+  <button type="button" class="secondary" id="frikortReveal" style="width:100%">🔒 Bekreft alder og sjekk frikort</button>
+  <div id="frikortContent" hidden style="margin-top:14px">
+   <div class="field"><label for="frikortBirthYear">Kva år er du fødd?</label><input type="number" id="frikortBirthYear" min="1900" max="2026" step="1" inputmode="numeric" placeholder="Til dømes 2007"></div>
+   <button type="button" class="primary" id="frikortCheck" style="width:100%">Sjekk frikort</button>
+   <div id="frikortResult" role="status" aria-live="polite" style="margin-top:14px" hidden></div>
+  </div>
+  <p class="small" style="margin-top:12px">Frikortgrensa for 2026 er 100 000 kr. For andre år må du kontrollere årsgrensa hos Skatteetaten. Dette er berre ei oversikt, ikkje ei stadfesting frå Skatteetaten. <a href="https://www.skatteetaten.no/person/skatt/skattekort/frikort/" target="_blank" rel="noopener noreferrer">Sjekk frikort hos Skatteetaten</a>.</p>
+ </section>
+ <section class="panel" style="margin-top:14px"><h2 style="margin-top:0">🏢 Kva bedrifter jobbar du i?</h2><p class="small">Legg inn arbeidsplassane dine her. Vel deretter bedrift når du fører lønn.</p><form id="employerAddForm" class="row" style="gap:8px;align-items:end"><div class="field" style="flex:1;margin:0"><label for="newEmployerName">Namn på bedrift</label><input id="newEmployerName" maxlength="70" placeholder="Til dømes Bedrift AS" required></div><button type="submit" class="primary">＋ Legg til</button></form><div id="savedEmployerList" style="margin-top:12px"></div></section>
+ <div class="section-head"><h2>Bedrifter denne månaden</h2><span class="small" id="salaryCount"></span></div><section class="panel" id="salaryCompanies"></section>
+ <div class="section-head"><h2>Lønnsregistreringar</h2><button type="button" class="primary" id="addSalaryBtn">＋ Legg til lønn</button></div><section class="panel salary-list" id="salaryHistory"></section>
+ <p class="footer">Registrer utbetalt lønn manuelt. Opplysningane blir lagra lokalt på denne eininga.</p>
+</section>
+<section id="owedView" hidden>
+ <div class="month-nav"><button type="button" class="secondary" id="owedPrev" aria-label="Førre månad">❮</button><strong id="owedMonthLabel"></strong><button type="button" class="secondary" id="owedNext" aria-label="Neste månad">❯</button></div>
+ <div class="section-head"><h2>Pengar eg ventar på</h2><button type="button" class="primary" id="addOwedBtn">＋ Legg til person</button></div>
+ <section class="panel"><div class="small">Totalt du ikkje har fått enno</div><div class="owed-total" id="owedTotal">0 kr</div><div class="small">Berre beløp med status «Ikkje fått» blir rekna med.</div></section>
+ <section class="panel" id="owedRepeatChartPanel" style="margin-top:14px" hidden><h2 style="margin-bottom:5px">📊 Beløp per person</h2><p class="small" style="margin:0 0 16px">Personar som er førte fleire gonger. Stolpane viser samla beløp du ikkje har fått.</p><div id="owedRepeatChart"></div></section>
+ <div class="section-head"><h2>Ikkje fått</h2></div><section class="panel" id="owedPending"></section>
+ <div class="section-head"><h2>Fått</h2></div><section class="panel" id="owedReceived"></section>
+ <p class="footer">Denne oversikta er heilt separat frå lønn og utgifter. Data blir lagra på eininga di.</p>
+</section>
+<section id="shoppingView" hidden>
+ <div class="section-head"><h2>🛒 Handleliste</h2><span class="small" id="shoppingCount"></span></div>
+ <section class="panel">
+  <div class="field" style="margin-bottom:12px"><label for="shoppingAccount">Kva konto gjeld handlelista?</label><select id="shoppingAccount" style="width:100%"></select></div>
+  <form id="shoppingForm" class="row" style="align-items:end;gap:9px">
+   <div class="field" style="flex:1;margin:0"><label for="shoppingInput">Kva skal du handle?</label><input id="shoppingInput" type="text" maxlength="120" placeholder="Til dømes mjølk" required></div>
+   <button class="primary" type="submit">＋ Legg til</button>
+  </form>
+  <p class="small" style="margin:12px 0 0">Kryss av når du har handla noko. Lista blir lagra automatisk.</p>
+  <div id="shoppingItems" style="margin-top:10px"></div>
+ </section>
+ <section class="panel" style="margin-top:16px">
+  <div class="section-head"><h3>✅ Har handla</h3><span class="small" id="shoppingDoneCount"></span></div>
+  <div id="shoppingDoneItems" style="margin-top:10px"></div>
+  <button type="button" id="shoppingClearDone" class="secondary" style="margin-top:12px" hidden>Fjern alle varer du har handla</button>
+ </section>
+</section>
+<div id="resetAllPanel" style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line)">
+ <button id="resetAllData" type="button" class="secondary" style="display:block;width:100%;padding:15px;border-radius:13px">↺ Tilbakestill alt</button>
+ <p class="small" style="text-align:center;margin-top:8px">Slett alle kontoar, utgifter, budsjett, utgiftstypar, butikkar, lønn, pengar igjen og handleliste. Appen blir som ny.</p>
+</div>
+</main>
+
+<div class="modal-backdrop" id="accountModal">
+ <form class="modal" id="accountForm">
+  <h2>Opprett konto</h2>
+  <div class="field"><label for="accountName">Namn på kontoen</label><input id="accountName" maxlength="28" placeholder="Til dømes Kantina" required></div>
+  <div class="field"><label for="accountIsShop">Skal denne kontoen brukast til butikk?</label><select id="accountIsShop"><option value="no">Nei</option><option value="yes">Ja</option></select></div>
+  <div class="field" id="accountShopTypeField" style="display:none"><label for="accountShopType">Kva slags butikk?</label><select id="accountShopType"><option value="daglegvare">Daglegvarebutikk</option><option value="butikk">Butikk</option></select></div>
+  <div class="field"><label for="accountEmoji">Symbol</label><select id="accountEmoji"><option>🍽️</option><option>🛒</option><option>🚗</option><option>☕</option><option>🎮</option><option>🏠</option><option>🎉</option><option>📦</option><option>💳</option></select></div>
+  <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Opprett konto</button></div>
+ </form>
+</div>
+<div class="modal-backdrop" id="budgetModal"><form class="modal" id="budgetForm"><h2>Set månadsbudsjett</h2><div class="field"><label for="budgetAccount">Konto</label><select id="budgetAccount" required></select></div><div class="field"><label for="budgetValue">Maksbeløp per månad (kr)</label><input id="budgetValue" type="number" min="0" step="0.01" placeholder="Til dømes 1500" required></div><p class="small">Skriv 0 for å fjerne budsjettet. Budsjettet gjeld kvar månad.</p><div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Lagre budsjett</button></div></form></div>
+<div class="modal-backdrop" id="amountModal">
+ <form class="modal" id="amountForm">
+  <h2 id="amountModalTitle">Legg til beløp</h2>
+  <div class="field"><label for="amountAccount">Konto</label><select id="amountAccount" required></select></div>
+  <div class="field" id="amountShopField" style="display:none"><label for="amountShop">Kva butikk handla du på?</label><select id="amountShop"></select></div>
+  <div class="field" id="amountShopLocationField" style="display:none"><label for="amountShopLocation">Kor ligg butikken?</label><select id="amountShopLocation"></select></div>
+  <div class="field"><label for="amountValue">Beløp i kroner</label><input id="amountValue" type="number" min="0.01" step="0.01" placeholder="Til dømes 50" required></div>
+  <div class="field"><label for="amountSavedType">Vel ein lagra utgiftstype (fyller inn pris automatisk)</label><select id="amountSavedType"><option value="">Vel type eller skriv sjølv under</option></select></div>
+  <div class="field"><label for="amountNote">Kva gjaldt kjøpet? (valfritt)</label><input id="amountNote" maxlength="50" placeholder="Til dømes lunsj"></div>
+  <div class="field" id="amountDateField" hidden><label for="amountDate">Dato</label><input id="amountDate" type="date"></div>
+  <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit" id="amountSubmit">Lagre beløp</button></div>
+ </form>
+</div>
+<div class="modal-backdrop" id="salaryModal"><form class="modal" id="salaryForm">
+ <h2>Legg til lønn</h2>
+ <div class="field"><label for="salarySavedEmployer">Vel arbeidsplass</label><select id="salarySavedEmployer"><option value="">Vel bedrift</option></select></div>
+ <div class="field" id="salaryEmployerField" hidden><label for="salaryEmployer">Ny bedrift / arbeidsgivar</label><input id="salaryEmployer" maxlength="70" placeholder="Til dømes Bedrift AS"></div>
+ <div class="field"><label for="salaryAmount">Utbetalt lønn (kr)</label><input id="salaryAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Til dømes 25000" required></div>
+ <div class="field"><label for="salaryDate">Utbetalingsdato</label><input id="salaryDate" type="date" required></div>
+ <div class="field"><label for="salaryNote">Merknad (valfritt)</label><input id="salaryNote" maxlength="100" placeholder="Til dømes ekstravakt"></div>
+ <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Lagre lønn</button></div>
+</form></div>
+<div class="modal-backdrop" id="owedModal"><form class="modal" id="owedForm">
+ <h2 id="owedModalTitle">Legg til pengar du ventar på</h2>
+ <div class="field"><label for="owedSavedPerson">Vel ein person du har brukt før</label><select id="owedSavedPerson"><option value="">＋ Ny person / skriv namn under</option></select></div>
+ <div class="field"><label for="owedPerson">Namn på person</label><input id="owedPerson" maxlength="70" placeholder="Til dømes Pappa" required></div>
+ <div class="field"><label for="owedAmount">Beløp (kr)</label><input id="owedAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required></div>
+ <div class="field"><label style="display:flex;align-items:center;gap:10px"><input id="owedSplit" type="checkbox" style="width:auto"> Del beløpet mellom fleire personar</label></div>
+ <div class="field" id="owedSplitFields" hidden><label for="owedSplitCount">Kor mange personar skal få kvar sin registrering?</label><input id="owedSplitCount" type="number" min="2" max="1000" step="1" inputmode="numeric" value="2"><div class="field" style="margin-top:12px"><label style="display:flex;align-items:center;gap:10px"><input id="owedSplitMe" type="checkbox" style="width:auto"> Er det deg? (din del skal ikkje loggførast)</label></div><div class="field" id="owedOwnAccountField" hidden style="margin-top:12px"><label for="owedOwnAccount">Før min del som utgift på konto</label><select id="owedOwnAccount"></select><div class="small" style="margin-top:6px">Din del blir registrert under Utgifter på denne kontoen.</div></div><div class="small" id="owedSplitPreview" style="margin-top:8px"></div></div>
+ <div class="field"><label for="owedDate">Dato du la det inn</label><input id="owedDate" type="date" required></div>
+ <div class="field"><label for="owedNote">Merknad (valfritt)</label><input id="owedNote" maxlength="100" placeholder="Til dømes pengar for middag"></div>
+ <div class="field"><label for="owedStatus">Status</label><select id="owedStatus"><option value="pending">Ikkje fått</option><option value="received">Fått</option></select></div>
+ <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button type="submit" class="primary" id="owedSaveBtn">Lagre</button></div>
+</form></div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('nb-NO',{maximumFractionDigits:2}).format(n)+' kr';
+const KEY='min-okonomi-v1';
+const HEADING_KEY='min-okonomi-heading-v1';
+
+const EXPENSE_TYPES_KEY='min-okonomi-expense-types-v1';
+const ACCOUNT_EXPENSE_TYPES_KEY='min-okonomi-expense-types-by-account-v1';
+function normaliseType(x){
+ if(typeof x==='string')return {name:x,price:null};
+ if(!x||typeof x.name!=='string')return null;
+ return {name:x.name,price:Number(x.price)>0?Number(x.price):null};
+}
+function loadExpenseTypesByAccount(){
+ try{
+  const data=JSON.parse(localStorage.getItem(ACCOUNT_EXPENSE_TYPES_KEY));
+  if(data&&typeof data==='object'&&!Array.isArray(data))return data;
+ }catch(e){}
+ return {};
+}
+let expenseTypesByAccount=loadExpenseTypesByAccount();
+function saveExpenseTypes(){localStorage.setItem(ACCOUNT_EXPENSE_TYPES_KEY,JSON.stringify(expenseTypesByAccount))}
+function typesFor(id){
+ if(!id)return [];
+ if(!Array.isArray(expenseTypesByAccount[id]))expenseTypesByAccount[id]=[];
+ return expenseTypesByAccount[id];
+}
+function migrateOldExpenseTypes(){
+ if(localStorage.getItem(ACCOUNT_EXPENSE_TYPES_KEY)!==null)return;
+ let old=[];
+ try{const a=JSON.parse(localStorage.getItem(EXPENSE_TYPES_KEY));if(Array.isArray(a))old=a.map(normaliseType).filter(Boolean)}catch(e){}
+ // Gamle felles typar blir berre flytta til første konto, ikkje kopierte til alle.
+ if(old.length&&state.accounts.length)expenseTypesByAccount[state.accounts[0].id]=old.map(x=>({...x}));
+ saveExpenseTypes();
+}
+function renderExpenseTypes(){
+ const host=$('expenseTypesList'),sel=$('amountSavedType'),manage=$('expenseTypeAccount');
+ const previous=manage.value;
+ manage.innerHTML='';
+ state.accounts.forEach(a=>{const opt=document.createElement('option');opt.value=a.id;opt.textContent=a.emoji+' '+a.name;manage.appendChild(opt)});
+ if(selected!=='all'&&state.accounts.some(a=>a.id===selected))manage.value=selected;
+ else if(state.accounts.some(a=>a.id===previous))manage.value=previous;
+ const accountId=manage.value;
+ host.innerHTML='';
+ if(!accountId){host.textContent='Opprett ein konto først.';return}
+ const types=typesFor(accountId);
+ const activeAccount=state.accounts.find(a=>a.id===accountId);
+ const kantina=state.accounts.find(a=>a.name.trim().toLocaleLowerCase('nb-NO')==='kantina');
+ const isSpel=activeAccount&&activeAccount.name.trim().toLocaleLowerCase('nb-NO')==='spel';
+ const kantinaNames=['bagueta','julebrus','monster','pepsi max','varm mat'];
+ $('fixKantinaWrap').style.display=(isSpel&&kantina&&types.some(t=>kantinaNames.includes(t.name.trim().toLocaleLowerCase('nb-NO'))))?'block':'none';
+ if(!types.length)host.innerHTML='<div class="small">Ingen lagra typar for denne kontoen enno.</div>';
+ types.forEach(type=>{
+  const row=document.createElement('div');row.className='row';row.style.padding='9px 0';
+  const info=document.createElement('div');
+  const name=document.createElement('strong');name.textContent=type.name;
+  const price=document.createElement('div');price.className='small';price.textContent=type.price!==null?fmt(type.price):'Ingen fast pris';
+  info.append(name,price);
+  const actions=document.createElement('div');actions.style.display='flex';actions.style.gap='6px';
+  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Endre pris';
+  edit.onclick=()=>{
+   const value=prompt('Fast pris for '+type.name+' i kr (tomt = ingen fast pris):',type.price===null?'':String(type.price));
+   if(value===null)return;
+   const n=Number(value.replace(',','.').trim());
+   if(value.trim()!==''&&(!(n>0)||!Number.isFinite(n))){alert('Skriv ein gyldig pris større enn 0.');return}
+   type.price=value.trim()===''?null:Math.round(n*100)/100;
+   saveExpenseTypes();renderExpenseTypes();
+  };
+  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Slett';
+  del.onclick=()=>{if(confirm('Slette utgiftstypen '+type.name+' frå denne kontoen? Gamle utgifter blir ikkje sletta.')){expenseTypesByAccount[accountId]=types.filter(x=>x!==type);saveExpenseTypes();renderExpenseTypes()}};
+  actions.append(edit,del);row.append(info,actions);host.appendChild(row);
+ });
+}
+function renderAmountTypes(){
+ const sel=$('amountSavedType'),accountId=$('amountAccount').value;
+ sel.innerHTML='<option value="">Vel type eller skriv sjølv under</option>';
+ typesFor(accountId).forEach(type=>{
+  const opt=document.createElement('option');opt.value=type.name;opt.textContent=type.name+(type.price!==null?' – '+fmt(type.price):'');sel.appendChild(opt);
+ });
+}
+const SHOP_PRESETS_KEY='min-okonomi-shop-presets-v1';
+let shopPresets={};
+try{const x=JSON.parse(localStorage.getItem(SHOP_PRESETS_KEY));if(x&&typeof x==='object'&&!Array.isArray(x))shopPresets=x}catch(e){}
+function presetsFor(id){if(!shopPresets[id])shopPresets[id]={shops:[],locations:[]};return shopPresets[id]}
+function saveShopPresets(){localStorage.setItem(SHOP_PRESETS_KEY,JSON.stringify(shopPresets))}
+function renderShopPresets(){
+ const account=state.accounts.find(a=>a.id===selected);
+ const visible=!!(account&&(account.shopType==='daglegvare'||account.shopType==='butikk'));
+ $('shopPresetsSection').hidden=!visible;
+ const id=visible?account.id:null;
+ for(const [key,hostId] of [['shops','shopPresetList'],['locations','locationPresetList']]){
+  const host=$(hostId);host.innerHTML='';
+  if(!id){host.textContent='Vel ein daglegvare- eller butikkonto først.';continue}
+  const items=presetsFor(id)[key];
+  if(!items.length){const hint=document.createElement('p');hint.className='small';hint.textContent='Ingen lagra '+(key==='shops'?'butikkar':'stader')+' enno.';host.appendChild(hint)}
+  items.forEach(item=>{
+   const row=document.createElement('div');row.className='row';row.style.padding='8px 0';
+   const label=document.createElement('strong');label.textContent=item;
+   const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Slett';
+   del.onclick=()=>{if(confirm('Slette '+item+' frå lista? Tidlegare utgifter blir ikkje sletta.')){presetsFor(id)[key]=items.filter(x=>x!==item);saveShopPresets();renderShopPresets()}};
+   row.append(label,del);host.appendChild(row);
+  });
+ }
+}
+function addPreset(key){
+ const account=state.accounts.find(a=>a.id===selected);
+ const id=account&&(account.shopType==='daglegvare'||account.shopType==='butikk')?account.id:null;
+ if(!id){alert('Vel ein butikkonto under Mine kontoar først.');return}
+ const label=key==='shops'?'butikk':'stad';const value=prompt('Namn på '+label+':');if(value===null)return;
+ const name=value.trim();if(!name)return;
+ if(name.length>100){alert('Namnet er for langt.');return}
+ const list=presetsFor(id)[key];
+ if(list.some(x=>x.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){alert('Denne finst allereie.');return}
+ list.push(name);list.sort((a,b)=>a.localeCompare(b,'nb-NO'));saveShopPresets();renderShopPresets();
+}
+$('addShopPreset').onclick=()=>addPreset('shops');
+$('addLocationPreset').onclick=()=>addPreset('locations');
+function updateAmountShop(){
+ const account=state.accounts.find(a=>a.id===$('amountAccount').value);
+ const enabled=!!(account&&account.shopType);
+ $('amountShopField').style.display=enabled?'block':'none';
+ $('amountShopLocationField').style.display=enabled?'block':'none';
+ $('amountShop').required=enabled;
+ for(const [key,id,placeholder] of [['shops','amountShop','Vel butikk'],['locations','amountShopLocation','Vel stad (valfritt)']]){
+  const sel=$(id);sel.innerHTML='';
+  const first=document.createElement('option');first.value='';first.textContent=placeholder;sel.appendChild(first);
+  if(enabled){
+   // Tidlegare registrerte namn blir også tilgjengelege som val.
+   const historic=state.transactions.filter(t=>t.accountId===account.id).map(t=>key==='shops'?t.shop:t.shopLocation).filter(Boolean);
+   const names=[...new Set([...presetsFor(account.id)[key],...historic])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+   names.forEach(name=>{const opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.appendChild(opt)});
+  }
+ }
+}
+$('expenseTypeAccount').onchange=renderExpenseTypes;
+$('fixKantinaBtn').onclick=()=>{
+ const from=state.accounts.find(a=>a.id===$('expenseTypeAccount').value);
+ const to=state.accounts.find(a=>a.name.trim().toLocaleLowerCase('nb-NO')==='kantina');
+ if(!from||from.name.trim().toLocaleLowerCase('nb-NO')!=='spel'||!to)return;
+ const names=['bagueta','julebrus','monster','pepsi max','varm mat'];
+ const fromTypes=typesFor(from.id),toTypes=typesFor(to.id);
+ const moving=fromTypes.filter(t=>names.includes(t.name.trim().toLocaleLowerCase('nb-NO')));
+ if(!moving.length)return;
+ if(!confirm('Flytte '+moving.length+' utgiftstypar frå Spel til Kantina? Ingen registrerte utgifter blir sletta.'))return;
+ moving.forEach(t=>{if(!toTypes.some(x=>x.name.trim().toLocaleLowerCase('nb-NO')===t.name.trim().toLocaleLowerCase('nb-NO')))toTypes.push({...t})});
+ expenseTypesByAccount[from.id]=fromTypes.filter(t=>!moving.includes(t));
+ saveExpenseTypes();renderExpenseTypes();alert('Ferdig! Kantina-typane er ikkje lenger på Spel.');
+};
+$('amountAccount').onchange=()=>{renderAmountTypes();updateAmountShop();$('amountNote').value='';$('amountValue').value=''};
+$('addExpenseTypeBtn').onclick=()=>{
+ const accountId=$('expenseTypeAccount').value;
+ if(!accountId){alert('Opprett ein konto først.');return}
+ const nameInput=prompt('Namn på ny utgiftstype:');if(nameInput===null)return;
+ const name=nameInput.trim();if(!name)return;
+ if(name.length>50){alert('Maks 50 teikn.');return}
+ const types=typesFor(accountId);
+ if(types.some(x=>x.name.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){alert('Denne typen finst allereie på denne kontoen.');return}
+ const priceInput=prompt('Kva kostar '+name+'? Pris i kr (eller tomt dersom prisen varierer):','');
+ if(priceInput===null)return;
+ const n=Number(priceInput.replace(',','.').trim());
+ if(priceInput.trim()!==''&&(!(n>0)||!Number.isFinite(n))){alert('Skriv ein gyldig pris større enn 0.');return}
+ types.push({name,price:priceInput.trim()===''?null:Math.round(n*100)/100});
+ types.sort((a,b)=>a.name.localeCompare(b.name,'nb-NO'));saveExpenseTypes();renderExpenseTypes();
+};
+$('amountSavedType').onchange=()=>{
+ const type=typesFor($('amountAccount').value).find(x=>x.name===$('amountSavedType').value);
+ if(type){$('amountNote').value=type.name;if(type.price!==null)$('amountValue').value=type.price}
+};
+
+function updateHeading(){const heading=(localStorage.getItem(HEADING_KEY)||'Min økonomi').trim();document.getElementById('appHeading').textContent=heading;document.title=heading;}
+document.getElementById('editHeading').addEventListener('click',()=>{const current=document.getElementById('appHeading').textContent;const name=prompt('Kva skal appen heite?',current);if(name===null)return;const cleaned=name.trim();if(!cleaned){alert('Skriv inn eit namn.');return;}if(cleaned.length>40){alert('Namnet kan ha maks 40 teikn.');return;}localStorage.setItem(HEADING_KEY,cleaned);updateHeading();});
+updateHeading();
+let state=load(), selected='all', chartType='bar', viewedMonth=new Date();viewedMonth.setDate(1);
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{accounts:[],transactions:[]}}catch(e){return {accounts:[],transactions:[]}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+const SALARY_KEY='min-okonomi-salary-v1';
+function loadSalary(){try{const data=JSON.parse(localStorage.getItem(SALARY_KEY));return Array.isArray(data)?data:[]}catch(e){return []}}
+let salaryEntries=loadSalary();
+const SALARY_EMPLOYERS_KEY='min-okonomi-salary-employers-v1';
+function loadSalaryEmployers(){try{const a=JSON.parse(localStorage.getItem(SALARY_EMPLOYERS_KEY));return Array.isArray(a)?a.filter(x=>typeof x==='string'):[]}catch(e){return []}}
+let salaryEmployers=loadSalaryEmployers();
+function rememberSalaryEmployer(name){if(!salaryEmployers.some(x=>x.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){salaryEmployers.push(name);localStorage.setItem(SALARY_EMPLOYERS_KEY,JSON.stringify(salaryEmployers))}}
+function refreshSalaryEmployers(){
+ const select=$('salarySavedEmployer');select.replaceChildren();
+ const names=[...new Set([...salaryEmployers,...salaryEntries.map(x=>x.employer).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+ for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.append(opt)}
+ const other=document.createElement('option');other.value='__new__';other.textContent='＋ Skriv inn ny bedrift';select.append(other);
+ select.value=names.length?names[0]:'__new__';updateEmployerChoice();
+}
+function updateEmployerChoice(){const custom=$('salarySavedEmployer').value==='__new__';$('salaryEmployerField').hidden=!custom;$('salaryEmployer').required=custom;if(!custom)$('salaryEmployer').value=''}
+$('salarySavedEmployer').onchange=updateEmployerChoice;
+$('employerAddForm').onsubmit=e=>{e.preventDefault();const name=$('newEmployerName').value.trim();if(!name)return;rememberSalaryEmployer(name);$('newEmployerName').value='';renderSalary()};
+function renderEmployerList(){
+ const host=$('savedEmployerList');host.replaceChildren();
+ const names=[...new Set([...salaryEmployers,...salaryEntries.map(x=>x.employer).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+ if(!names.length){const empty=document.createElement('div');empty.className='small';empty.textContent='Ingen bedrifter lagra enno.';host.append(empty);return}
+ names.forEach(name=>{const line=document.createElement('div');line.className='transaction';const label=document.createElement('strong');label.textContent='🏢 '+name;const actions=document.createElement('div');actions.style.cssText='display:flex;gap:6px';
+ const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='×';remove.setAttribute('aria-label','Fjern lagra bedrift '+name);remove.onclick=()=>{if(!confirm('Fjerne «'+name+'» frå lista over arbeidsplassar? Tidlegare lønn blir ikkje sletta.'))return;salaryEmployers=salaryEmployers.filter(x=>x!==name);localStorage.setItem(SALARY_EMPLOYERS_KEY,JSON.stringify(salaryEmployers));renderSalary()};
+ actions.append(remove);line.append(label,actions);host.append(line)})
+}
+let salaryMonth=new Date(); salaryMonth.setDate(1);
+function saveSalary(){localStorage.setItem(SALARY_KEY,JSON.stringify(salaryEntries));if(typeof refreshVisibleFrikort==='function')refreshVisibleFrikort()}
+function salaryInMonth(item){const d=new Date(item.date+'T12:00:00');return d.getFullYear()===salaryMonth.getFullYear()&&d.getMonth()===salaryMonth.getMonth()}
+function salaryMonthEntries(){return salaryEntries.filter(salaryInMonth)}
+const FRIKORT_LIMIT_2026=100000;
+function frikortLimitForYear(year){return year===2026?FRIKORT_LIMIT_2026:(Number(localStorage.getItem('min-okonomi-frikort-limit-'+year))||FRIKORT_LIMIT_2026);}
+let refreshVisibleFrikort=null;
+let frikortDisplayedYear=salaryMonth.getFullYear();
+let frikortOverviewOpen=false;
+function checkFrikortYearChange(){
+ const selectedYear=salaryMonth.getFullYear();
+ if(selectedYear===frikortDisplayedYear)return;
+ const wasOpen=frikortOverviewOpen;
+ frikortDisplayedYear=selectedYear;
+ frikortOverviewOpen=false;
+ refreshVisibleFrikort=null;
+ $('frikortBirthYear').max=String(selectedYear);
+ const birthYear=Number($('frikortBirthYear').value);
+ if($('frikortContent').hidden)return;
+ $('frikortBirthYear').closest('.field').hidden=false;
+ $('frikortCheck').hidden=false;
+ $('frikortResult').hidden=true;
+ $('frikortResult').replaceChildren();
+ $('frikortReveal').textContent='🔓 Skjul frikort-sjekk';
+ if(Number.isInteger(birthYear)&&birthYear>=1900&&birthYear<=selectedYear){
+  updateFrikort();
+  if(wasOpen){
+   const fetchButton=[...$('frikortResult').querySelectorAll('button')].find(b=>b.textContent.includes('Hent frikort'));
+   if(fetchButton)fetchButton.click();
+  }
+ }
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkFrikortYearChange()});
+window.addEventListener('focus',checkFrikortYearChange);
+setInterval(checkFrikortYearChange,60000);
+$('frikortReveal').onclick=()=>{
+ checkFrikortYearChange();
+ refreshVisibleFrikort=null;
+ const content=$('frikortContent');
+ if(frikortOverviewOpen){
+  // Ved nytt søk skal brukaren få sjekken for det valde lønnsåret på nytt.
+  frikortOverviewOpen=false;
+  content.hidden=false;
+  $('frikortBirthYear').closest('.field').hidden=false;
+  $('frikortCheck').hidden=false;
+  $('frikortResult').hidden=true;
+  $('frikortResult').replaceChildren();
+  $('frikortReveal').textContent='🔓 Skjul frikort-sjekk';
+  return;
+ }
+ content.hidden=!content.hidden;
+ $('frikortReveal').textContent=content.hidden?'🔒 Bekreft alder og sjekk frikort':'🔓 Skjul frikort-sjekk';
+};
+function updateFrikort(){
+ frikortDisplayedYear=salaryMonth.getFullYear();
+ refreshVisibleFrikort=null;
+ const result=$('frikortResult');const year=Number($('frikortBirthYear').value);const currentYear=salaryMonth.getFullYear();
+ $('frikortBirthYear').max=String(currentYear);
+ result.hidden=false;result.replaceChildren();
+ if(!Number.isInteger(year)||year<1900||year>currentYear){result.textContent='Skriv inn eit gyldig fødselsår.';return;}
+ const age=currentYear-year;
+ const paragraph=document.createElement('p');paragraph.textContent='Du fyller '+age+' år i '+currentYear+'. Det finst inga øvre aldersgrense for frikort.';result.appendChild(paragraph);
+ if(age<13){const note=document.createElement('p');note.textContent='For barn under 13 år gjeld eigne reglar. Kontakt Skatteetaten.';result.appendChild(note);return;}
+ const yearPrefix=String(currentYear)+'-';
+ let yearLimit=frikortLimitForYear(currentYear);
+ // Same 'Hent frikort' flow for every year. For later years, 2026's limit
+ // is only a temporary estimate until the user has checked that year's limit.
+ if(currentYear!==2026&&!localStorage.getItem('min-okonomi-frikort-limit-'+currentYear)){
+  const note=document.createElement('p');note.className='small';
+  note.textContent='Merk: '+fmt(yearLimit)+' er førebels grense frå 2026. Kontroller frikortgrensa for '+currentYear+' hos Skatteetaten.';
+  result.appendChild(note);
+ }
+ const sum=salaryEntries.filter(x=>x.date&&x.date.startsWith(yearPrefix)).reduce((total,x)=>total+Number(x.amount||0),0);
+ const left=Math.max(0,yearLimit-sum);
+ const strong=document.createElement('strong');strong.textContent='Registrert lønn i '+currentYear+': '+fmt(sum);result.appendChild(strong);
+ const rest=document.createElement('p');rest.textContent=sum<=yearLimit?'Igjen til frikortgrensa: '+fmt(left):'Du har registrert '+fmt(sum-yearLimit)+' over frikortgrensa.';result.appendChild(rest);
+ const getCard=document.createElement('button');getCard.type='button';getCard.textContent='📊 Hent frikort';getCard.className='primary';getCard.style.cssText='display:block;width:100%;text-align:center;padding:13px 16px;border-radius:12px;margin:12px 0;font-weight:700;background:#8059d6;color:white';result.appendChild(getCard);
+ const overview=document.createElement('div');overview.hidden=true;overview.style.cssText='padding:14px;border:1px solid var(--line);border-radius:13px;margin:12px 0';result.appendChild(overview);
+ const redrawOverview=()=>{
+  if(salaryMonth.getFullYear()!==currentYear){updateFrikort();return;}
+  const sum=salaryEntries.filter(x=>x.date&&x.date.startsWith(yearPrefix)).reduce((total,x)=>total+Number(x.amount||0),0);
+  const left=Math.max(0,yearLimit-sum);
+  overview.replaceChildren();
+  overview.style.cssText='padding:18px 14px;border:1px solid var(--line);border-radius:18px;margin:12px 0;background:#111116';
+  const heading=document.createElement('h3');heading.textContent='📊 Di frikortoversikt – '+currentYear;heading.style.cssText='margin:0 0 25px;font-size:21px';overview.appendChild(heading);
+  const columns=document.createElement('div');columns.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px';
+  for(const [label,value,color] of [['Totalt tent',sum,'#fff'],['Igjen av frikortet',left,'#16c46c']]){
+   const cell=document.createElement('div');
+   const name=document.createElement('div');name.className='small';name.textContent=label;name.style.marginBottom='12px';
+   const amount=document.createElement('strong');amount.textContent=fmt(value);amount.style.cssText='font-size:clamp(19px,5vw,30px);color:'+color+';white-space:nowrap';
+   cell.append(name,amount);columns.appendChild(cell);
+  }
+  overview.appendChild(columns);
+  const track=document.createElement('div');track.setAttribute('role','progressbar');track.setAttribute('aria-label','Brukt del av frikortgrensa');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(Math.min(100,Math.round(sum/yearLimit*100))));track.style.cssText='width:100%;height:20px;background:#343434;border-radius:999px;overflow:hidden';
+  const fill=document.createElement('div');fill.style.cssText='height:100%;width:'+Math.min(100,Math.max(0,sum/yearLimit*100))+'%;background:'+(sum>yearLimit?'#f87171':'#a78bfa')+';border-radius:999px';track.appendChild(fill);overview.appendChild(track);
+  const foot=document.createElement('div');foot.style.cssText='display:flex;justify-content:space-between;gap:10px;margin-top:14px';
+  const percent=document.createElement('span');percent.className='small';percent.textContent=Math.round(sum/yearLimit*100)+' % brukt';
+  const limit=document.createElement('span');limit.className='small';limit.textContent='Grense: '+fmt(yearLimit);foot.append(percent,limit);overview.appendChild(foot);
+  if(sum>yearLimit){
+   const taxBox=document.createElement('div');taxBox.style.cssText='margin-top:18px;padding:14px;border:1px solid #8059d6;border-radius:12px;background:#211c30';
+   const title=document.createElement('strong');title.textContent='💰 Skatt når du er over frikortgrensa';taxBox.appendChild(title);
+   const label=document.createElement('label');label.htmlFor='frikortTaxPercent';label.textContent='Skattetrekk i prosent frå skattekortet ditt';label.style.cssText='display:block;margin:10px 0 6px';
+   const input=document.createElement('input');input.type='number';input.id='frikortTaxPercent';input.min='0';input.max='100';input.step='0.1';input.inputMode='decimal';input.placeholder='Skriv inn prosenten din';input.value=localStorage.getItem('min-okonomi-tax-percent')||'';
+   const search=document.createElement('button');search.type='button';search.textContent='🔎 Søk';search.style.marginTop='12px';
+   const estimate=document.createElement('div');estimate.style.cssText='margin-top:12px;font-weight:700';estimate.hidden=true;
+   search.onclick=()=>{
+    const raw=input.value.trim().replace(',','.');
+    const pct=Number(raw);
+    estimate.hidden=false;
+    if(!raw||!Number.isFinite(pct)||pct<0||pct>100){estimate.textContent='Skriv inn ein gyldig skatteprosent mellom 0 og 100.';return;}
+    localStorage.setItem('min-okonomi-tax-percent',raw);
+    estimate.replaceChildren();
+    const heading=document.createElement('div');heading.textContent='Å betale i skatt (overslag)';
+    const value=document.createElement('div');value.style.cssText='font-size:24px;margin-top:6px;color:#62d6a6';value.textContent=fmt(sum*pct/100);
+    estimate.append(heading,value);
+    const again=document.createElement('button');
+    again.type='button';
+    again.textContent='🔎 Søk på nytt';
+    again.style.cssText='display:block;width:100%;margin-top:16px';
+    again.onclick=()=>{
+     estimate.hidden=true;
+     taxBox.replaceChildren(title,label,input,search,estimate);
+     input.focus();
+    };
+    taxBox.replaceChildren(estimate,again);
+   };
+   input.addEventListener('input',()=>{estimate.hidden=true});
+   taxBox.append(label,input,search,estimate);
+   overview.appendChild(taxBox);
+  }
+  const disclaimer=document.createElement('p');disclaimer.className='small';disclaimer.style.marginTop='18px';disclaimer.textContent='Basert på lønn registrert i appen, ikkje offisielle tal frå Skatteetaten.';overview.appendChild(disclaimer);
+ };
+ getCard.onclick=()=>{
+  frikortOverviewOpen=true;
+  redrawOverview();
+  [...result.children].forEach(el=>{if(el!==overview)el.hidden=true});
+  overview.hidden=false;
+  refreshVisibleFrikort=redrawOverview;
+  $('frikortBirthYear').closest('.field').hidden=true;
+  $('frikortCheck').hidden=true;
+  $('frikortReveal').textContent='↩ Sjekk frikort på nytt';
+ };
+ const note=document.createElement('p');note.className='small';note.textContent='Hugs å ta med andre skattepliktige inntekter og feriepengar. Har du fleire arbeidsgivarar, må frikortet fordelast hos Skatteetaten. Om du ventar meir enn frikortgrensa i '+currentYear+', treng du skattekort.';result.appendChild(note);
+}
+$('frikortCheck').onclick=updateFrikort;
+function renderSalary(){
+ checkFrikortYearChange();
+ $('salaryMonthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(salaryMonth);
+ renderEmployerList();
+ const entries=salaryMonthEntries(),total=entries.reduce((sum,x)=>sum+x.amount,0);
+ $('salaryTotal').textContent=fmt(total);
+ const selectedYear=salaryMonth.getFullYear();
+ $('salaryYearLabel').textContent=selectedYear;
+ $('salaryYearTotal').textContent=fmt(salaryEntries.filter(x=>x.date&&x.date.startsWith(String(selectedYear)+'-')&&x.date.slice(0,7)<=String(selectedYear)+'-'+String(salaryMonth.getMonth()+1).padStart(2,'0')).reduce((sum,x)=>sum+Number(x.amount||0),0));
+ const companies=new Map();entries.forEach(x=>companies.set(x.employer,(companies.get(x.employer)||0)+x.amount));
+ $('salaryCount').textContent=companies.size+' bedrifter';
+ const companyHost=$('salaryCompanies');companyHost.replaceChildren();
+ if(!companies.size){const e=document.createElement('div');e.className='empty';e.textContent='Ingen lønn registrert denne månaden.';companyHost.append(e)}
+ [...companies.entries()].sort((a,b)=>b[1]-a[1]).forEach(([name,amount])=>{const e=document.createElement('div');e.className='transaction';const left=document.createElement('strong');left.textContent=name;const right=document.createElement('strong');right.textContent=fmt(amount);e.append(left,right);companyHost.append(e)});
+ const host=$('salaryHistory');host.replaceChildren();
+ if(!entries.length){const e=document.createElement('div');e.className='empty';e.textContent='Trykk «Legg til lønn» for å registrere ei utbetaling.';host.append(e)}
+ entries.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(x=>{
+  const e=document.createElement('div');e.className='transaction';
+  const info=document.createElement('div');info.className='tx-main';
+  const title=document.createElement('div');title.className='salary-company';title.textContent=x.employer;
+  const details=document.createElement('div');details.className='tx-date';details.textContent=new Intl.DateTimeFormat('nn-NO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(x.date+'T12:00:00'))+(x.note?' · '+x.note:'');
+  info.append(title,details);
+  const amount=document.createElement('strong');amount.className='tx-amount';amount.textContent=fmt(x.amount);
+  const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='×';remove.setAttribute('aria-label','Slett lønn');remove.onclick=()=>{if(confirm('Vil du slette denne lønnsregistreringa?')){salaryEntries=salaryEntries.filter(y=>y.id!==x.id);saveSalary();renderSalary()}};
+  e.append(info,amount,remove);host.append(e);
+ });
+
+}
+const SHOPPING_KEY='min-okonomi-shopping-list-v1';
+let shoppingItems=[];
+try{const saved=JSON.parse(localStorage.getItem(SHOPPING_KEY));if(Array.isArray(saved))shoppingItems=saved.filter(x=>x&&typeof x.name==='string')}catch(e){}
+function saveShopping(){localStorage.setItem(SHOPPING_KEY,JSON.stringify(shoppingItems))}
+function makeShoppingOwedId(){return typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()}
+function syncShoppingOwed(item,person,amount){
+ // Ei ny lagring frå handlelista aktiverer koplinga igjen.
+ if(item.owedDeleted){delete item.owedDeleted;saveShopping()}
+ // Eitt handlelistekjøp skal berre ha éi tilknytt registrering i Pengar igjen.
+ const key=String(item.id);
+ let linked=owedEntries.find(x=>String(x.shoppingItemId)===key);
+ if(!linked){
+  const now=new Date();
+  const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  linked={id:makeShoppingOwedId(),shoppingItemId:item.id,recordedDate:date,status:'pending'};
+  owedEntries.push(linked);
+ }
+ linked.person=person;
+ linked.amount=Number(amount);
+ linked.note='Handleliste: '+item.name;
+ if(!linked.recordedDate){
+  const now=new Date();linked.recordedDate=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+ }
+ saveOwed();
+ // Pengar igjen viser gjeldande månad; ubetalte postar frå tidlegare månader følgjer med.
+ const today=new Date();owedMonth=new Date(today.getFullYear(),today.getMonth(),1);
+ if(!$('owedView').hidden)renderOwed();
+}
+function syncShoppingExpense(item,accountId,amount){
+ const account=state.accounts.find(a=>String(a.id)===String(accountId));
+ if(!account)throw new Error('Kontoen finst ikkje lenger');
+ const linked=state.transactions.filter(t=>String(t.shoppingItemId)===String(item.id));
+ const existing=linked[0];
+ if(existing){
+  existing.accountId=account.id;existing.amount=Number(amount);
+  existing.note='Handleliste: '+item.name;
+  // Unngå duplikat dersom tidlegare versjonar har oppretta fleire postar.
+  if(linked.length>1)state.transactions=state.transactions.filter(t=>String(t.shoppingItemId)!==String(item.id)||t.id===existing.id);
+ }else{
+  state.transactions.push({id:makeShoppingOwedId(),shoppingItemId:item.id,accountId:account.id,amount:Number(amount),note:'Handleliste: '+item.name,shop:'',shopLocation:'',createdAt:Date.now()});
+ }
+ save();
+ if(!$('expensesView').hidden)render();
+}
+function removeShoppingExpense(item){
+ if(!item||item.id==null)return;
+ const before=state.transactions.length;
+ state.transactions=state.transactions.filter(t=>String(t.shoppingItemId)!==String(item.id));
+ if(state.transactions.length!==before){save();if(!$('expensesView').hidden)render()}
+}
+function removeShoppingOwed(item){
+ if(!item||!item.id)return;
+ owedEntries=owedEntries.filter(x=>x.shoppingItemId!==item.id||x.status==='received');
+ saveOwed();
+}
+
+// Lukk heile statusredigeringa straks brukaren lagrar, utan å la gamle felt bli ståande.
+function closeShoppingStatusEditor(row){
+ row.querySelectorAll('.shopping-status-choices, .shopping-account-choice, .shopping-person-choice').forEach(el=>{
+  el.hidden=true;
+  el.style.display='none';
+  el.remove();
+ });
+}
+
+// Éin felles lagrefunksjon: status og beløp blir lagra saman før lista blir teikna på nytt.
+function commitShoppingStatus(item,status,amount,details){
+ const savedItem=shoppingItems.find(x=>String(x.id)===String(item.id));
+ if(!savedItem)return;
+ const sum=Number(amount);
+ if(!Number.isFinite(sum)||sum<=0){alert('Skriv inn eit gyldig beløp.');return}
+ // Oppdater sjølve vara først, og lagre før andre funksjonar blir kalla.
+ savedItem.recordStatus=status;
+ savedItem.recordAmount=sum;
+ if(status==='skal førast'){
+  savedItem.recordAccountId=details.accountId;
+  delete savedItem.recordPerson;
+ }else{
+  savedItem.recordPerson=details.person;
+  delete savedItem.recordAccountId;
+ }
+ saveShopping();
+ // Oppdater Pengar igjen før lista blir teikna på nytt.
+ try{
+  if(status==='skal førast'){
+   syncShoppingExpense(savedItem,details.accountId,sum);
+   removeShoppingOwed(savedItem);
+  }else{
+   removeShoppingExpense(savedItem);
+   rememberOwedPerson(details.person);
+   syncShoppingOwed(savedItem,details.person,sum);
+  }
+ }catch(error){console.error('Kunne ikkje synkronisere Pengar igjen:',error);alert('Kunne ikkje overføre til Pengar igjen. Prøv igjen.')}
+ renderShopping();
+}
+
+function renderShopping(){
+ const accountPicker=$('shoppingAccount');
+ const currentAccount=accountPicker.value;
+ accountPicker.replaceChildren();
+ const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent=state.accounts.length?'Vel konto':'Ingen kontoar – lag ein under Utgifter';accountPicker.append(placeholder);
+ state.accounts.forEach(a=>{const option=document.createElement('option');option.value=a.id;option.textContent=(a.emoji||'')+' '+a.name;accountPicker.append(option)});
+ const remembered=localStorage.getItem('min-okonomi-shopping-selected-account-v1');
+ accountPicker.value=state.accounts.some(a=>a.id===(currentAccount||remembered))?(currentAccount||remembered):'';
+ const host=$('shoppingItems'),doneHost=$('shoppingDoneItems');host.replaceChildren();doneHost.replaceChildren();
+ const selectedShoppingAccount=accountPicker.value;
+ const visibleShoppingItems=shoppingItems.filter(x=>selectedShoppingAccount&&String(x.shoppingAccountId)===String(selectedShoppingAccount));
+ const pending=visibleShoppingItems.filter(x=>!x.done),done=visibleShoppingItems.filter(x=>x.done);
+ $('shoppingCount').textContent=pending.length+' att å handle';
+ $('shoppingDoneCount').textContent=done.length+' handla';
+ $('shoppingClearDone').hidden=!done.length;
+ function showEmpty(container,message){const p=document.createElement('p');p.className='small';p.textContent=message;container.append(p)}
+ if(!pending.length)showEmpty(host,'Ingen varer att å handle.');
+ if(!done.length)showEmpty(doneHost,'Her kjem varene du kryssar av som handla.');
+ visibleShoppingItems.forEach(item=>{
+  const target=item.done?doneHost:host;
+  const row=document.createElement('div');row.className='row';row.style.cssText='gap:10px;align-items:center;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--line)';
+  const label=document.createElement('label');label.style.cssText='display:flex;gap:11px;align-items:center;flex:1;min-width:0;cursor:pointer';
+  const check=document.createElement('input');check.type='checkbox';check.checked=!!item.done;check.style.cssText='width:22px;height:22px;flex-shrink:0;accent-color:#a78bfa';
+  check.onchange=()=>{item.done=check.checked;if(!item.done){removeShoppingExpense(item);removeShoppingOwed(item);delete item.recordStatus;delete item.recordAmount;delete item.recordAccountId;delete item.recordPerson}saveShopping();renderShopping()};
+  // Vis alltid lagra informasjon under kontoen, også etter at valmenyen er lukka.
+  // Bruk ein eigen tekstboks slik at berre varenamnet får gjennomstreking.
+  const name=document.createElement('span');name.style.cssText='overflow-wrap:anywhere;min-width:0;display:block;flex:1';
+  const itemTitle=document.createElement('span');itemTitle.textContent=item.name;
+  if(item.done)itemTitle.style.cssText='text-decoration:line-through;opacity:.55';
+  name.append(itemTitle);
+  function addShoppingDetail(text){
+   const note=document.createElement('span');note.textContent=text;
+   note.className='shopping-detail-line';
+   note.style.cssText='display:block;font-size:12px;line-height:1.55;color:var(--muted);margin-top:3px;text-decoration:none';
+   name.append(note);
+  }
+  const itemAccount=state.accounts.find(a=>String(a.id)===String(item.shoppingAccountId));
+  // Vis konto, status og beløp som tre tydelege felt under kvar handla vare.
+  // Eldre lagra varer får også vist status, sjølv om ingen status er vald.
+  if(itemAccount)addShoppingDetail('Konto: '+itemAccount.name);
+  else addShoppingDetail('Konto: '+(item.shoppingAccountId?'Ukjend konto':'Ikkje valt'));
+  if(item.done){
+   const linkedOwed=owedEntries.find(x=>String(x.shoppingItemId)===String(item.id));
+   const rawStatus=String(item.recordStatus||'').trim().toLowerCase();
+   const status=rawStatus==='skal førast'||rawStatus==='skal ikkje førast'?rawStatus:(item.recordPerson||linkedOwed?'skal ikkje førast':'');
+   addShoppingDetail('Status: '+(status==='skal førast'?'Skal førast':status==='skal ikkje førast'?'Skal ikkje førast':'Ikkje valt'));
+   const amount=Number(item.recordAmount ?? (linkedOwed&&linkedOwed.amount) ?? 0);
+   addShoppingDetail('Beløp: '+(Number.isFinite(amount)&&amount>0?fmt(amount):'Ikkje lagt inn'));
+   if(status==='skal førast'){
+    const account=state.accounts.find(a=>String(a.id)===String(item.recordAccountId));
+    addShoppingDetail('Førast på: '+(account?account.name:'Ikkje valt'));
+   }else if(status==='skal ikkje førast'){
+    const person=item.recordPerson||(linkedOwed&&linkedOwed.person);
+    addShoppingDetail('Førast på: '+(person||'Ikkje valt'));
+   }
+  }
+  label.append(check,name);
+  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='×';del.setAttribute('aria-label','Fjern '+item.name);del.onclick=()=>{removeShoppingOwed(item);removeShoppingExpense(item);shoppingItems=shoppingItems.filter(x=>x.id!==item.id);saveShopping();renderShopping()};
+  if(item.done){
+   const change=document.createElement('button');change.type='button';change.className='secondary';change.textContent='Endre status';change.style.cssText='width:auto;flex-shrink:0;padding:9px 11px;font-size:13px';
+   change.setAttribute('aria-label','Endre status for '+item.name);
+   change.onclick=()=>{
+    const existing=row.querySelector('.shopping-status-choices');
+    if(existing){existing.remove();return}
+    const choices=document.createElement('div');choices.className='shopping-status-choices';choices.style.cssText='display:flex;gap:8px;flex-wrap:wrap;width:100%;padding:5px 0 4px 33px';
+    for(const [value,title] of [['skal førast','Skal førast'],['skal ikkje førast','Skal ikkje førast']]){
+     const option=document.createElement('button');option.type='button';option.className=item.recordStatus===value?'primary':'secondary';option.textContent=title;option.style.cssText='width:auto;padding:9px 12px;font-size:13px';option.dataset.shoppingStatus=value;
+     option.onclick=()=>{
+      // Vis kva som blir valt, men ikkje lagre før brukaren trykkjer Lagre val.
+      choices.querySelectorAll('button[data-shopping-status]').forEach(b=>b.className=b.dataset.shoppingStatus===value?'primary':'secondary');
+      if(value==='skal førast'){
+       const old=choices.querySelector('.shopping-account-choice');if(old)old.remove()
+       const other=choices.querySelector('.shopping-person-choice');if(other)other.remove();
+       const field=document.createElement('div');field.className='shopping-account-choice';field.style.cssText='width:100%;padding-top:8px';
+       const title=document.createElement('label');title.textContent='Vel konto under Utgifter';title.style.cssText='display:block;font-size:13px;margin-bottom:7px';
+       const accountSelect=document.createElement('select');accountSelect.style.cssText='width:100%;max-width:420px';
+       const blank=document.createElement('option');blank.value='';blank.textContent=state.accounts.length?'Vel ein konto':'Ingen kontoar – opprett ein under Utgifter';accountSelect.append(blank);
+       state.accounts.forEach(a=>{const opt=document.createElement('option');opt.value=a.id;opt.textContent=(a.emoji||'')+' '+a.name;accountSelect.append(opt)});
+       if(state.accounts.some(a=>a.id===item.recordAccountId))accountSelect.value=item.recordAccountId;
+       const amountLabel=document.createElement('label');amountLabel.textContent='Kor mykje kosta vara? (kr)';amountLabel.style.cssText='display:block;font-size:13px;margin:10px 0 7px';
+       const amountInput=document.createElement('input');amountInput.type='number';amountInput.min='0.01';amountInput.step='0.01';amountInput.inputMode='decimal';amountInput.placeholder='Til dømes 150';amountInput.value=item.recordAmount||'';amountInput.style.cssText='width:100%;max-width:420px';
+       const saveButton=document.createElement('button');saveButton.type='button';saveButton.className='primary';saveButton.textContent='Lagre val';saveButton.style.cssText='width:auto;margin-top:9px;padding:9px 12px;font-size:13px';
+       saveButton.onclick=(event)=>{event.preventDefault();event.stopPropagation();if(!accountSelect.value){alert('Vel ein konto under Utgifter først.');return}const amount=Number(String(amountInput.value).replace(',','.'));if(!Number.isFinite(amount)||amount<=0){alert('Skriv inn beløpet for vara.');return}commitShoppingStatus(item,value,amount,{accountId:accountSelect.value})};
+       field.append(title,accountSelect,amountLabel,amountInput,saveButton);choices.append(field);
+      }else{
+       const old=choices.querySelector('.shopping-person-choice');if(old)old.remove()
+       const previous=choices.querySelector('.shopping-account-choice');if(previous)previous.remove();
+       const field=document.createElement('div');field.className='shopping-person-choice';field.style.cssText='width:100%;padding-top:8px';
+       const title=document.createElement('label');title.textContent='Kven skal du få pengane av?';title.style.cssText='display:block;font-size:13px;margin-bottom:7px';
+       const personSelect=document.createElement('select');personSelect.style.cssText='width:100%;max-width:420px;margin-bottom:8px';
+       const blank=document.createElement('option');blank.value='';blank.textContent='Skriv nytt namn under';personSelect.append(blank);
+       const names=[...new Set([...owedPeople,...owedEntries.map(x=>x.person).filter(Boolean),...shoppingItems.map(x=>x.recordPerson).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+       names.forEach(person=>{const opt=document.createElement('option');opt.value=person;opt.textContent=person;personSelect.append(opt)});
+       const nameInput=document.createElement('input');nameInput.type='text';nameInput.placeholder='Eller skriv nytt namn';nameInput.style.cssText='width:100%;max-width:420px';
+       if(item.recordPerson){if(names.includes(item.recordPerson))personSelect.value=item.recordPerson;else nameInput.value=item.recordPerson}
+       personSelect.onchange=()=>{if(personSelect.value)nameInput.value=''};
+       nameInput.oninput=()=>{if(nameInput.value.trim())personSelect.value=''};
+       const amountLabel=document.createElement('label');amountLabel.textContent='Kor mykje skal du få tilbake? (kr)';amountLabel.style.cssText='display:block;font-size:13px;margin:10px 0 7px';
+       const amountInput=document.createElement('input');amountInput.type='number';amountInput.min='0.01';amountInput.step='0.01';amountInput.inputMode='decimal';amountInput.placeholder='Til dømes 150';amountInput.value=item.recordAmount||'';amountInput.style.cssText='width:100%;max-width:420px';
+       const saveButton=document.createElement('button');saveButton.type='button';saveButton.className='primary';saveButton.textContent='Lagre val';saveButton.style.cssText='width:auto;margin-top:9px;padding:9px 12px;font-size:13px';
+       saveButton.onclick=(event)=>{event.preventDefault();event.stopPropagation();const person=(nameInput.value.trim()||personSelect.value).trim(),amount=Number(String(amountInput.value).replace(',','.'));if(!person){alert('Vel eller skriv namnet på personen.');return}if(!Number.isFinite(amount)||amount<=0){alert('Skriv inn beløpet du skal få tilbake.');return}commitShoppingStatus(item,value,amount,{person})};
+       field.append(title,personSelect,nameInput,amountLabel,amountInput,saveButton);choices.append(field);
+      }
+     };choices.append(option)
+    }
+    row.append(choices);
+   };
+   row.append(label,change,del);
+  }else row.append(label,del);
+  target.append(row);
+ });
+}
+$('shoppingAccount').onchange=()=>{localStorage.setItem('min-okonomi-shopping-selected-account-v1',$('shoppingAccount').value);renderShopping()};
+$('shoppingForm').onsubmit=e=>{e.preventDefault();const input=$('shoppingInput'),name=input.value.trim();if(!name)return;const accountId=$('shoppingAccount').value;if(!accountId){alert('Vel ein konto frå Utgifter først.');$('shoppingAccount').focus();return}shoppingItems.push({id:String(Date.now())+'-'+Math.random(),name,done:false,shoppingAccountId:accountId});saveShopping();input.value='';renderShopping();input.focus()};
+$('shoppingClearDone').onclick=()=>{const selected=$('shoppingAccount').value;shoppingItems.filter(x=>x.done&&String(x.shoppingAccountId)===String(selected)).forEach(x=>{removeShoppingOwed(x);removeShoppingExpense(x)});shoppingItems=shoppingItems.filter(x=>!(x.done&&String(x.shoppingAccountId)===String(selected)));saveShopping();renderShopping()};
+
+function switchView(view){
+ const salary=view==='salary',owed=view==='owed',expenses=view==='expenses',shopping=view==='shopping';
+ $('expensesView').hidden=!expenses;$('salaryView').hidden=!salary;$('owedView').hidden=!owed;$('shoppingView').hidden=!shopping;
+ for(const [id,on] of [['expensesTab',expenses],['salaryTab',salary],['owedTab',owed],['shoppingTab',shopping]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-selected',String(on))}
+ if(salary)renderSalary();else if(owed){const now=new Date();owedMonth=new Date(now.getFullYear(),now.getMonth(),1);renderOwed();}else if(shopping)renderShopping();else render();window.scrollTo(0,0)
+}
+$('expensesTab').onclick=()=>switchView('expenses');$('salaryTab').onclick=()=>switchView('salary');$('owedTab').onclick=()=>switchView('owed');$('shoppingTab').onclick=()=>switchView('shopping');
+$('salaryPrev').onclick=()=>{salaryMonth.setMonth(salaryMonth.getMonth()-1);renderSalary()};
+$('salaryNext').onclick=()=>{salaryMonth.setMonth(salaryMonth.getMonth()+1);renderSalary()};
+function openSalaryForm(preselected){refreshSalaryEmployers();if(preselected){$('salarySavedEmployer').value=preselected;updateEmployerChoice()}const now=new Date();const date=new Date(salaryMonth.getFullYear(),salaryMonth.getMonth(),Math.min(now.getDate(),new Date(salaryMonth.getFullYear(),salaryMonth.getMonth()+1,0).getDate()));$('salaryDate').value=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');show('salaryModal')}
+$('addSalaryBtn').onclick=()=>openSalaryForm();
+$('salaryForm').onsubmit=e=>{e.preventDefault();const employer=($('salarySavedEmployer').value==='__new__'?$('salaryEmployer').value:$('salarySavedEmployer').value).trim(),amount=Number($('salaryAmount').value),date=$('salaryDate').value;if(!employer||!Number.isFinite(amount)||amount<=0||!/^\d{4}-\d{2}-\d{2}$/.test(date))return;rememberSalaryEmployer(employer);salaryEntries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),employer,amount,date,note:$('salaryNote').value.trim()});saveSalary();e.target.reset();hideAll();renderSalary()};
+
+const OWED_KEY='min-okonomi-owed-v1';
+const OWED_PEOPLE_KEY='min-okonomi-owed-people-v1';
+function loadOwedPeople(){try{const a=JSON.parse(localStorage.getItem(OWED_PEOPLE_KEY));return Array.isArray(a)?a.filter(x=>typeof x==='string'):[]}catch(e){return []}}
+let owedPeople=loadOwedPeople();
+function rememberOwedPerson(name){if(!owedPeople.some(x=>x.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){owedPeople.push(name);localStorage.setItem(OWED_PEOPLE_KEY,JSON.stringify(owedPeople))}}
+function refreshOwedPeople(){const select=$('owedSavedPerson');select.replaceChildren();const first=document.createElement('option');first.value='';first.textContent='＋ Ny person / skriv namn under';select.append(first);const names=[...new Set([...owedPeople,...owedEntries.map(x=>x.person).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.append(opt)}select.value=''}
+$('owedSavedPerson').onchange=()=>{if($('owedSavedPerson').value)$('owedPerson').value=$('owedSavedPerson').value};
+function loadOwed(){try{const a=JSON.parse(localStorage.getItem(OWED_KEY));return Array.isArray(a)?a:[]}catch(e){return []}}
+let owedEntries=loadOwed();
+function saveOwed(){localStorage.setItem(OWED_KEY,JSON.stringify(owedEntries))}
+let owedMonth=new Date();owedMonth.setDate(1);owedMonth.setHours(0,0,0,0);
+$('owedPrev').onclick=()=>{owedMonth.setMonth(owedMonth.getMonth()-1);renderOwed()};
+$('owedNext').onclick=()=>{owedMonth.setMonth(owedMonth.getMonth()+1);renderOwed()};
+// Reparer eldre handlelistevarer som er lagra med «Skal ikkje førast»,
+// men ikkje vart synkroniserte til Pengar igjen i tidlegare versjonar.
+function reconcileShoppingOwed(){
+ let changed=false;
+ for(const item of shoppingItems){
+  if(!item.done||item.owedDeleted||String(item.recordStatus||'').trim().toLowerCase()!=='skal ikkje førast')continue;
+  const person=String(item.recordPerson||'').trim();
+  const amount=Number(item.recordAmount);
+  if(!person||!Number.isFinite(amount)||amount<=0)continue;
+  const key=String(item.id);
+  let entry=owedEntries.find(x=>String(x.shoppingItemId)===key);
+  if(!entry){
+   const now=new Date();
+   const date=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+   entry={id:makeShoppingOwedId(),shoppingItemId:item.id,recordedDate:date,status:'pending'};
+   owedEntries.push(entry);changed=true;
+  }
+  if(entry.person!==person||Number(entry.amount)!==amount||entry.note!=='Handleliste: '+item.name){
+   entry.person=person;entry.amount=amount;entry.note='Handleliste: '+item.name;changed=true;
+  }
+ }
+ if(changed)saveOwed();
+}
+function renderOwed(){
+ reconcileShoppingOwed();
+ $('owedMonthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(owedMonth);
+ const selectedMonth=owedMonth.getFullYear()+'-'+String(owedMonth.getMonth()+1).padStart(2,'0');
+ // Ubetalte registreringar blir vidareførte til alle seinare månader utan duplikat.
+ // Betalte registreringar blir berre viste i månaden dei vart registrerte.
+ const monthEntries=owedEntries.filter(x=>{
+  const entryMonth=String(x.recordedDate||'').slice(0,7);
+  return x.status==='received'?entryMonth===selectedMonth:entryMonth<=selectedMonth;
+ });
+ const pending=monthEntries.filter(x=>x.status!=='received');
+ $('owedTotal').textContent=fmt(pending.reduce((n,x)=>n+Number(x.amount||0),0));
+ // Samle alle ubetalte registreringar per namn, men vis berre namn som finst fleire gonger.
+ const grouped=new Map();
+ pending.forEach(x=>{
+  const name=String(x.person||'').trim();if(!name)return;
+  const key=name.toLocaleLowerCase('nb-NO');
+  if(!grouped.has(key))grouped.set(key,{name,amount:0,count:0});
+  const group=grouped.get(key);group.amount+=Number(x.amount)||0;group.count++;
+ });
+ const repeated=[...grouped.values()].filter(x=>x.count>1).sort((a,b)=>b.amount-a.amount);
+ const chartPanel=$('owedRepeatChartPanel'),chart=$('owedRepeatChart');
+ chartPanel.hidden=!repeated.length;chart.replaceChildren();
+ if(repeated.length){
+  const max=Math.max(...repeated.map(x=>x.amount),0);
+  repeated.forEach(x=>{
+   const row=document.createElement('div');row.className='owed-chart-row';
+   const meta=document.createElement('div');meta.className='owed-chart-meta';
+   const name=document.createElement('span');name.className='owed-chart-name';name.textContent=x.name;
+   const amount=document.createElement('span');amount.className='owed-chart-amount';amount.textContent=fmt(x.amount);
+   meta.append(name,amount);
+   const track=document.createElement('div');track.className='owed-chart-track';
+   const fill=document.createElement('div');fill.className='owed-chart-fill';fill.style.width=(max>0?Math.max(0,x.amount)/max*100:0)+'%';
+   track.append(fill);
+   const count=document.createElement('div');count.className='owed-chart-count';count.textContent=x.count+' registreringar';
+   row.append(meta,track,count);chart.append(row);
+  });
+ }
+
+ for(const [hostId,entries] of [['owedPending',pending],['owedReceived',monthEntries.filter(x=>x.status==='received')]]){
+  const host=$(hostId);host.replaceChildren();
+  if(!entries.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=hostId==='owedPending'?'Ingen ubetalte beløp fram til denne månaden.':'Ingen registrerte som fått denne månaden.';host.append(empty);continue}
+  entries.forEach(x=>{
+   const item=document.createElement('div');item.className='owed-item';
+   const info=document.createElement('div');info.style.flex='1';
+   const name=document.createElement('strong');name.textContent=x.person;
+   const amount=document.createElement('div');amount.style.marginTop='4px';amount.textContent=fmt(Number(x.amount));
+   if(x.splitCount>1){const split=document.createElement('div');split.className='small';split.textContent='Delt '+fmt(Number(x.originalAmount))+' på '+x.splitCount+' personar · denne personen sin del: '+fmt(Number(x.amount));info.append(name,amount,split);}
+   const recorded=document.createElement('div');recorded.className='small';recorded.textContent='Lagt inn: '+(x.recordedDate?new Intl.DateTimeFormat('nb-NO',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'}).format(new Date(x.recordedDate+'T12:00:00Z')):'Dato ikkje registrert');
+   const note=document.createElement('div');note.className='small';note.textContent=x.shoppingItemId?'Frå handleliste · '+(x.note||'').replace(/^Handleliste: /,'')+' · Førast på: '+x.person:(x.note||'');
+   const status=document.createElement('div');status.className='status-pill';status.textContent=x.status==='received'?'Status: Fått':'Status: Ikkje fått';
+   const actions=document.createElement('div');actions.className='owed-actions';
+   const toggle=document.createElement('button');toggle.type='button';toggle.className='secondary';toggle.textContent=x.status==='received'?'↩ Merk som ikkje fått':'✓ Merk som fått';toggle.onclick=()=>{x.status=x.status==='received'?'pending':'received';saveOwed();renderOwed()};
+   const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Slett';del.onclick=()=>{if(confirm('Vil du slette denne registreringa?')){if(x.shoppingItemId!=null){const shoppingItem=shoppingItems.find(y=>String(y.id)===String(x.shoppingItemId));if(shoppingItem){shoppingItem.owedDeleted=true;saveShopping()}}owedEntries=owedEntries.filter(y=>y.id!==x.id);saveOwed();renderOwed()}};
+   const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='✏️ Rediger';edit.onclick=()=>openOwedEdit(x);
+   actions.append(edit,toggle,del);if(!x.splitCount)info.append(name,amount);info.append(recorded,note,status,actions);item.append(info);host.append(item);
+  });
+ }
+}
+function updateOwedSplit(){
+ const on=$('owedSplit').checked;
+ $('owedSplitFields').hidden=!on;
+ $('owedSplitCount').required=on;
+ const total=Number($('owedAmount').value),count=Number($('owedSplitCount').value);
+ const me=on&&$('owedSplitMe').checked;
+ const ownField=$('owedOwnAccountField'),ownSelect=$('owedOwnAccount');
+ ownField.hidden=!me;ownSelect.required=me;
+ if(me){
+  const previous=ownSelect.value;
+  ownSelect.replaceChildren();
+  const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent=state.accounts.length?'Vel ein av kontoane dine under Utgifter':'Ingen kontoar enno – opprett ein under Utgifter';ownSelect.appendChild(placeholder);
+  state.accounts.forEach(a=>{const option=document.createElement('option');option.value=a.id;option.textContent=(a.emoji||'')+' '+a.name;ownSelect.appendChild(option)});
+  ownSelect.value=state.accounts.some(a=>a.id===previous)?previous:'';
+  ownSelect.disabled=!state.accounts.length;
+ }
+ $('owedSplitPreview').textContent=on&&Number.isFinite(total)&&total>0&&Number.isInteger(count)&&count>=2&&count<=1000?'Det blir '+(count-(me?1:0))+' registreringar'+(me?' (din del blir ikkje registrert)':'')+'. Omtrent '+fmt(Math.round(total/count*100)/100)+' per person. Du kan endre namna etter lagring.':'';
+}
+$('owedSplit').addEventListener('change',updateOwedSplit);
+$('owedAmount').addEventListener('input',updateOwedSplit);
+$('owedSplitCount').addEventListener('input',updateOwedSplit);
+$('owedSplitMe').addEventListener('change',updateOwedSplit);
+$('owedOwnAccount').addEventListener('focus',updateOwedSplit);
+let editingOwedId=null;
+function setOwedEditing(isEditing){
+ $('owedModalTitle').textContent=isEditing?'Rediger registrering':'Legg til pengar du ventar på';
+ $('owedSaveBtn').textContent=isEditing?'Lagre endringar':'Lagre';
+ $('owedSplit').closest('.field').hidden=isEditing;
+ if(isEditing)$('owedSplit').checked=false;
+ updateOwedSplit();
+}
+function openOwedEdit(x){
+ editingOwedId=x.id;
+ refreshOwedPeople();$('owedForm').reset();setOwedEditing(true);
+ $('owedPerson').value=x.person||'';
+ $('owedAmount').value=Number(x.amount)||'';
+ $('owedDate').value=x.recordedDate||'';
+ $('owedNote').value=x.note||'';
+ $('owedStatus').value=x.status==='received'?'received':'pending';
+ show('owedModal');
+}
+$('addOwedBtn').onclick=()=>{editingOwedId=null;refreshOwedPeople();$('owedForm').reset();setOwedEditing(false);const now=new Date();$('owedDate').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');updateOwedSplit();show('owedModal')};
+$('owedForm').onsubmit=e=>{
+ e.preventDefault();
+ const person=$('owedPerson').value.trim(),amount=Number($('owedAmount').value),recordedDate=$('owedDate').value;
+ const split=$('owedSplit').checked,count=split?Number($('owedSplitCount').value):1;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(recordedDate)||!person||!Number.isFinite(amount)||amount<=0||(split&&(!Number.isInteger(count)||count<2||count>1000)))return;
+ const note=$('owedNote').value.trim(),status=$('owedStatus').value;
+ if(split&&$('owedSplitMe').checked&&(!state.accounts.length||!state.accounts.some(a=>a.id===$('owedOwnAccount').value))){alert('Opprett og vel ein konto under Utgifter for din del.');return;}
+ if(editingOwedId!==null){
+  const entry=owedEntries.find(x=>x.id===editingOwedId);
+  if(!entry){alert('Fann ikkje registreringa.');return;}
+  if(Math.round(Number(entry.amount)*100)!==Math.round(amount*100)){
+   // Når ein enkelt del blir endra, er ikkje den gamle delingssummen lenger gyldig.
+   delete entry.originalAmount;delete entry.splitCount;delete entry.splitIndex;
+  }
+  Object.assign(entry,{person,amount,recordedDate,note,status});
+  rememberOwedPerson(person);saveOwed();editingOwedId=null;
+  e.target.reset();hideAll();renderOwed();return;
+ }
+ const makeId=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();
+ rememberOwedPerson(person);
+ if(split){
+  // Del i heile øre slik at alle registreringane til saman blir nøyaktig totalsummen.
+  const totalCents=Math.round(amount*100),base=Math.floor(totalCents/count),remainder=totalCents%count;
+  const excludeMe=$('owedSplitMe').checked;
+  if(excludeMe){
+   const ownIndex=count-1,ownAmount=(base+(ownIndex<remainder?1:0))/100;
+   const [year,month,day]=recordedDate.split('-').map(Number);
+   state.transactions.push({id:makeId(),accountId:$('owedOwnAccount').value,amount:ownAmount,note:'Min del av delt beløp'+(note?' – '+note:''),shop:'',shopLocation:'',createdAt:new Date(year,month-1,day,12).getTime()});
+   save();render();
+  }
+  for(let i=0;i<count;i++){ 
+   if(excludeMe&&i===count-1)continue; // Siste del er din og skal ikkje førast som pengar du ventar på.
+   const name=i===0?person:'Person '+(i+1);
+   owedEntries.push({id:makeId(),person:name,amount:(base+(i<remainder?1:0))/100,originalAmount:amount,splitCount:count,splitIndex:i+1,recordedDate,note,status});
+  }
+ }else{
+  owedEntries.push({id:makeId(),person,amount,recordedDate,note,status});
+ }
+ saveOwed();e.target.reset();hideAll();renderOwed();
+};
+function inMonth(t){const d=new Date(t.createdAt);return d.getFullYear()===viewedMonth.getFullYear()&&d.getMonth()===viewedMonth.getMonth()}
+function monthTx(){return state.transactions.filter(inMonth)}
+function budgetFor(id){const a=state.accounts.find(x=>x.id===id);return Number(a?.budget)||0}
+function budgetBar(amount,limit){const over=amount>limit;return `<div class="budget-track"><div class="budget-fill ${over?'over':''}" style="width:${Math.min(100,amount/limit*100)}%"></div></div><div class="budget-meta"><span>${Math.round(amount/limit*100)} % brukt</span><span style="color:${over?'#ff8585':'#62d6a6'}">${over?fmt(amount-limit)+' over budsjett':fmt(limit-amount)+' igjen'}</span></div>`}
+const dateFmt=s=>new Intl.DateTimeFormat('nb-NO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(s));
+function totalFor(id){return monthTx().filter(t=>id==='all'||t.accountId===id).reduce((a,t)=>a+t.amount,0)}
+function deleteExpenseAccount(id){
+ const account=state.accounts.find(a=>a.id===id);if(!account)return;
+ const count=state.transactions.filter(t=>t.accountId===id).length;
+ const message='Vil du slette kontoen «'+account.name+'»?\n\nDette slettar også '+count+' registrerte utgifter på kontoen, utgiftstypar, faste prisar, butikkar og stader. Dette kan ikkje angrast.\n\nLønn og Pengar igjen blir ikkje påverka.';
+ if(!confirm(message))return;
+ // Ekstra stadfesting for å unngå utilsikta tap av økonomidata.
+ if(!confirm('Er du heilt sikker på at du vil slette «'+account.name+'» og alle utgiftene på kontoen?'))return;
+ state.accounts=state.accounts.filter(a=>a.id!==id);
+ state.transactions=state.transactions.filter(t=>t.accountId!==id);
+ delete expenseTypesByAccount[id];saveExpenseTypes();
+ delete shopPresets[id];saveShopPresets();
+ if(selected===id)selected='all';
+ save();render();
+}
+$('resetAllData').onclick=()=>{
+ const first='Vil du tilbakestille HEILE Min økonomi?\n\nAlle kontoar, utgifter, budsjett, utgiftstypar, butikkar, lønnsregistreringar og Pengar igjen blir sletta. Dette kan ikkje angrast.';
+ if(!confirm(first))return;
+ if(!confirm('SISTE ÅTVARING: Er du heilt sikker på at ALT skal slettast permanent?'))return;
+ const keys=[KEY,HEADING_KEY,EXPENSE_TYPES_KEY,ACCOUNT_EXPENSE_TYPES_KEY,SHOP_PRESETS_KEY,SALARY_KEY,SALARY_EMPLOYERS_KEY,OWED_KEY,OWED_PEOPLE_KEY,SHOPPING_KEY,'min-okonomi-all-stats-mode'];
+ keys.forEach(key=>localStorage.removeItem(key));
+ location.reload();
+};
+let allStatsMode=localStorage.getItem('min-okonomi-all-stats-mode')==='pie'?'pie':localStorage.getItem('min-okonomi-all-stats-mode')==='vertical'?'vertical':'bar';
+$('allStatsBarBtn').onclick=()=>{allStatsMode='bar';localStorage.setItem('min-okonomi-all-stats-mode',allStatsMode);render()};
+$('allStatsVerticalBtn').onclick=()=>{allStatsMode='vertical';localStorage.setItem('min-okonomi-all-stats-mode',allStatsMode);render()};
+$('allStatsPieBtn').onclick=()=>{allStatsMode='pie';localStorage.setItem('min-okonomi-all-stats-mode',allStatsMode);render()};
+function render(){
+ $('monthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(viewedMonth);
+ $('grandTotal').textContent=fmt(totalFor('all'));
+ $('totalHint').textContent=monthTx().length+' registreringar denne månaden';
+ $('allExpenseStatsMonth').textContent=$('monthLabel').textContent;
+ $('allStatsBarBtn').classList.toggle('active',allStatsMode==='bar');
+ $('allStatsVerticalBtn').classList.toggle('active',allStatsMode==='vertical');
+ $('allStatsPieBtn').classList.toggle('active',allStatsMode==='pie');
+ $('allStatsBarBtn').setAttribute('aria-pressed',String(allStatsMode==='bar'));
+ $('allStatsVerticalBtn').setAttribute('aria-pressed',String(allStatsMode==='vertical'));
+ $('allStatsPieBtn').setAttribute('aria-pressed',String(allStatsMode==='pie'));
+ const statsHost=$('allExpenseStats');statsHost.innerHTML='';
+ const totalAll=totalFor('all');
+ if(!state.accounts.length||!monthTx().length){
+  const empty=document.createElement('div');empty.className='small';empty.textContent='Ingen utgifter registrerte denne månaden.';statsHost.appendChild(empty);
+ }else{
+  const colors=['#a78bfa','#62d6a6','#f6bd60','#6ec5ff','#ff8585','#d68cff'];
+  if(allStatsMode==='pie'&&totalAll>0){
+   const positive=state.accounts.map((account,i)=>({account,amount:totalFor(account.id),color:colors[i%colors.length]})).filter(x=>x.amount>0);
+   let degrees=0;
+   const stops=positive.map(x=>{const from=degrees;degrees+=x.amount/totalAll*360;return x.color+' '+from+'deg '+degrees+'deg'});
+   const circle=document.createElement('div');
+   circle.style.cssText='width:min(220px,75vw);height:min(220px,75vw);border-radius:50%;margin:8px auto 20px;position:relative;background:conic-gradient('+stops.join(',')+');';
+   circle.setAttribute('role','group');
+   circle.setAttribute('aria-label','Trykk på ein farge i sektordiagrammet for å sjå kontoen');
+   circle.style.cursor='pointer';
+   const detail=document.createElement('div');
+   detail.style.cssText='text-align:center;background:#252332;border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 14px';
+   detail.textContent='👆 Trykk på ein farge for å sjå kva konto det er.';
+   const showSlice=(item)=>{
+    detail.innerHTML='';
+    const colorRow=document.createElement('div');colorRow.style.cssText='display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:8px';
+    const swatch=document.createElement('span');swatch.style.cssText='display:inline-block;width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:'+item.color;
+    const colorName=document.createElement('strong');
+    const colorNames={'#a78bfa':'Lilla','#62d6a6':'Grøn','#f6bd60':'Gul/oransje','#6ec5ff':'Blå','#ff8585':'Raud/rosa','#d68cff':'Rosa/lilla'};
+    colorName.textContent='Farge: '+(colorNames[item.color]||item.color);
+    colorRow.append(swatch,colorName);
+    const title=document.createElement('div');title.textContent='Konto: '+item.account.emoji+' '+item.account.name;
+    const amount=document.createElement('div');amount.style.cssText='margin-top:5px;font-size:18px;font-weight:700';amount.textContent='Sum: '+fmt(item.amount);
+    const percent=document.createElement('div');percent.className='small';percent.textContent=(item.amount/totalAll*100).toLocaleString('nb-NO',{maximumFractionDigits:1})+' % av alle utgifter';
+    detail.append(colorRow,title,amount,percent);
+   };
+   circle.addEventListener('click',event=>{
+    const rect=circle.getBoundingClientRect();
+    const x=event.clientX-(rect.left+rect.width/2);
+    const y=event.clientY-(rect.top+rect.height/2);
+    if(Math.hypot(x,y)>rect.width/2)return;
+    const angle=(Math.atan2(y,x)*180/Math.PI+90+360)%360;
+    let running=0;
+    const item=positive.find(item=>{running+=item.amount/totalAll*360;return angle<running+0.00001});
+    if(item)showSlice(item);
+   });
+   statsHost.append(circle,detail);
+  }
+  if(allStatsMode==='vertical'&&totalAll>0){
+   const items=state.accounts.map((account,i)=>({account,amount:totalFor(account.id),color:colors[i%colors.length]})).filter(x=>x.amount>0);
+   const maxAmount=Math.max(...items.map(x=>x.amount));
+   const chart=document.createElement('div');chart.style.cssText='display:flex;align-items:flex-end;gap:12px;overflow-x:auto;min-height:245px;padding:12px 2px 8px;border-bottom:1px solid var(--line);margin-bottom:15px';
+   items.forEach(item=>{
+    const col=document.createElement('div');col.style.cssText='flex:1 0 65px;min-width:65px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px';
+    const amountLabel=document.createElement('span');amountLabel.className='small';amountLabel.textContent=fmt(item.amount);
+    const bar=document.createElement('div');bar.style.cssText='width:65%;min-height:4px;height:'+Math.max(4,Math.round(item.amount/maxAmount*155))+'px;background:'+item.color+';border-radius:7px 7px 0 0';
+    const name=document.createElement('span');name.className='small';name.style.cssText='text-align:center;overflow-wrap:anywhere';name.textContent=item.account.emoji+' '+item.account.name;
+    col.append(amountLabel,bar,name);chart.appendChild(col);
+   });
+   statsHost.appendChild(chart);
+  }
+  state.accounts.forEach((account,i)=>{
+   const amount=totalFor(account.id);
+   if(amount<=0)return;
+   const line=document.createElement('div');line.style.marginBottom='14px';
+   const heading=document.createElement('div');heading.className='row';heading.style.marginBottom='6px';
+   const name=document.createElement('span');name.textContent=account.emoji+' '+account.name;
+   const value=document.createElement('strong');value.textContent=fmt(amount)+' ('+Math.round(amount/totalAll*100)+' %)';
+   heading.append(name,value);
+   const track=document.createElement('div');track.style.cssText='height:10px;background:#30313b;border-radius:999px;overflow:hidden';
+   const fill=document.createElement('div');fill.style.cssText='height:100%;border-radius:999px;width:'+Math.min(100,amount/totalAll*100)+'%;background:'+colors[i%colors.length];
+   track.appendChild(fill);
+   if(allStatsMode==='bar')line.append(heading,track);
+   else{
+    const dot=document.createElement('span');dot.style.cssText='display:inline-block;width:11px;height:11px;border-radius:50%;background:'+colors[i%colors.length]+';margin-right:7px';
+    name.prepend(dot);line.append(heading);
+   }
+   statsHost.appendChild(line);
+  });
+  const footer=document.createElement('div');footer.className='row';footer.style.cssText='border-top:1px solid var(--line);padding-top:12px';
+  const label=document.createElement('strong');label.textContent='Totalt alle kontoar';
+  const amount=document.createElement('strong');amount.textContent=fmt(totalAll);
+  footer.append(label,amount);statsHost.appendChild(footer);
+ }
+
+ const allBudget=state.accounts.reduce((n,a)=>n+budgetFor(a.id),0);$('overallBudget').innerHTML=allBudget?'<div style="margin-top:15px"><div class="small">Samla månadsbudsjett: '+fmt(allBudget)+'</div>'+budgetBar(totalFor('all'),allBudget)+'</div>':'';
+ const host=$('accounts');host.innerHTML='';
+ state.accounts.forEach(a=>{
+  const b=document.createElement('button');b.className='account'+(selected===a.id?' active':'');
+  b.innerHTML=`<div class="emoji">${a.emoji}</div><div class="name"></div><div class="amount">${fmt(totalFor(a.id))}</div><div class="count">${monthTx().filter(t=>t.accountId===a.id).length} registreringar</div>`;
+  b.querySelector('.name').textContent=a.name+(a.shopType?' · '+(a.shopType==='daglegvare'?'Daglegvare':'Butikk'):'');b.onclick=()=>{selected=selected===a.id?'all':a.id;render()};host.appendChild(b);
+
+ });
+ const hasChosenAccount=selected!=='all'&&state.accounts.some(a=>a.id===selected);
+ $('allExpenseStatsSection').hidden=false;
+ $('chartStatsSection').hidden=!hasChosenAccount;
+ $('expenseTypesSection').hidden=!hasChosenAccount;
+ $('accountHistorySection').hidden=!hasChosenAccount;
+ $('deleteAccountPanel').style.display=hasChosenAccount?'':'none';
+ const deleteButton=$('deleteSelectedAccount');
+ const activeAccount=state.accounts.find(a=>a.id===selected);
+ deleteButton.disabled=!activeAccount;
+ deleteButton.textContent=activeAccount?'🗑 Slett konto: '+activeAccount.name:'🗑 Slett konto';
+ $('deleteAccountHint').textContent=activeAccount?'Berre den valde kontoen blir sletta.':'Vel ein konto ovanfor for å kunne slette han.';
+ deleteButton.onclick=()=>{if(activeAccount)deleteExpenseAccount(activeAccount.id)};
+ const budgets=$('budgetOverview');budgets.innerHTML='';if(!state.accounts.length)budgets.innerHTML='<div class="empty">Opprett ein konto for å setje budsjett.</div>';state.accounts.forEach(a=>{const limit=budgetFor(a.id),used=totalFor(a.id),el=document.createElement('div');el.style.padding='9px 0';el.innerHTML='<div class="row"><strong></strong><button class="budget-edit">'+(limit?'Endre':'Set budsjett')+'</button></div>'+(limit?'<div class="small">'+fmt(used)+' av '+fmt(limit)+'</div>'+budgetBar(used,limit):'<div class="small">Ikkje sett noko maksbeløp enno</div>');el.querySelector('strong').textContent=a.emoji+' '+a.name;el.querySelector('button').onclick=()=>openBudget(a.id);budgets.appendChild(el)});
+ const add=document.createElement('button');add.className='add-tile';add.innerHTML='＋<br>Opprett ny konto';add.onclick=openAccount;host.appendChild(add);
+ $('chartSub').textContent=selected==='all'?'Alle kontoar':(state.accounts.find(a=>a.id===selected)?.name||'Alle kontoar');
+ $('historyTitle').textContent=selected==='all'?'Siste registreringar':'Registreringar · '+(state.accounts.find(a=>a.id===selected)?.name||'');
+ const txs=monthTx().filter(t=>selected==='all'||t.accountId===selected).sort((a,b)=>b.createdAt-a.createdAt);
+ const h=$('history');h.innerHTML='';
+ if(!txs.length){h.innerHTML='<div class="empty">Her kjem registreringane dine når du legg til beløp.</div>'}
+ txs.slice(0,100).forEach(t=>{
+  const acc=state.accounts.find(a=>a.id===t.accountId);const el=document.createElement('div');el.className='transaction';
+  el.innerHTML=`<div class="tx-icon">${acc?.emoji||'💰'}</div><div class="tx-main"><div class="tx-title"></div><div class="tx-date">${dateFmt(t.createdAt)} · ${acc?.name||'Sletta konto'}</div></div><div class="tx-amount">${fmt(t.amount)}</div><button class="secondary edit-tx" title="Rediger registrering" aria-label="Rediger registrering" style="padding:7px 10px">✏️</button><button class="danger delete-tx" title="Slett registrering" aria-label="Slett registrering">×</button>`;
+  el.querySelector('.tx-title').textContent=(t.shop?t.shop+(t.shopLocation?' ('+t.shopLocation+')':'')+' · ':'')+(t.note||acc?.name||'Forbruk');
+  el.querySelector('.edit-tx').onclick=()=>editExpense(t.id);
+  el.querySelector('.delete-tx').onclick=()=>{if(confirm('Vil du slette denne registreringa?')){state.transactions=state.transactions.filter(x=>x.id!==t.id);save();render()}};
+  h.appendChild(el);
+ });
+ const bsel=$('budgetAccount');bsel.innerHTML='';state.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.emoji+' '+a.name;bsel.appendChild(o)});
+ const sel=$('amountAccount');sel.innerHTML='';
+ state.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.emoji+' '+a.name;sel.appendChild(o)});
+ $('addAmountBtn').disabled=!state.accounts.length;$('addAmountBtn').style.opacity=state.accounts.length?1:.5;
+ renderExpenseTypes();
+ renderShopPresets();
+ drawChart();
+}
+function drawChart(){
+ const c=$('chart'),ctx=c.getContext('2d'),rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ c.width=rect.width*dpr;c.height=rect.height*dpr;ctx.scale(dpr,dpr);
+ const w=rect.width,h=rect.height;ctx.clearRect(0,0,w,h);
+ const colors=['#a78bfa','#62d6a6','#f6bd60','#6ec5ff','#ff8585','#d68cff','#f18ab5','#a6d17b'];
+ const data=(selected==='all'?state.accounts.map(a=>({label:a.name,value:totalFor(a.id)})):monthTx().filter(t=>t.accountId===selected).reduce((m,t)=>{const day=new Date(t.createdAt).getDate();m[day]=(m[day]||0)+t.amount;return m},{}));const chartData=Array.isArray(data)?data:Object.entries(data).map(([day,value])=>({label:day+'.',value}));
+ $('legend').innerHTML='';
+ if(!chartData.length){ctx.fillStyle='#a4a9b5';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('Legg til beløp for å sjå statistikk',w/2,h/2);return}
+ chartData.forEach((x,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:${colors[i%colors.length]}"></i>`;s.append(document.createTextNode(x.label));$('legend').appendChild(s)});
+ if(chartType==='pie'){
+  const sum=chartData.reduce((a,x)=>a+x.value,0);let start=-Math.PI/2;const r=Math.min(w,h)*.37,cx=w/2,cy=h/2;
+  chartData.forEach((x,i)=>{const end=start+x.value/sum*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();start=end});
+  ctx.fillStyle='#f4f5f7';ctx.textAlign='center';ctx.font='bold 17px system-ui';ctx.fillText(fmt(sum),cx,cy+5);return;
+ }
+ const pad={l:42,r:12,t:15,b:38},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,max=Math.max(...chartData.map(x=>x.value))*1.15||1;
+ ctx.strokeStyle='#30343e';ctx.lineWidth=1;ctx.fillStyle='#a4a9b5';ctx.font='10px system-ui';ctx.textAlign='right';
+ for(let i=0;i<=4;i++){let y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(max*(1-i/4)).toString(),pad.l-7,y+3)}
+ const points=chartData.map((x,i)=>({x:pad.l+(i+.5)*cw/chartData.length,y:pad.t+ch-(x.value/max)*ch,v:x.value}));
+ if(chartType==='line'&&points.length>1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#a78bfa';ctx.lineWidth=3;ctx.stroke();points.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#a78bfa';ctx.fill()})}
+ else points.forEach((p,i)=>{const bw=Math.min(42,cw/chartData.length*.55);ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.roundRect(p.x-bw/2,p.y,bw,pad.t+ch-p.y,[5,5,0,0]);ctx.fill()});
+ ctx.textAlign='center';ctx.fillStyle='#a4a9b5';ctx.font='10px system-ui';
+ chartData.forEach((x,i)=>{let label=x.label.length>9?x.label.slice(0,8)+'…':x.label;ctx.fillText(label,points[i].x,h-13)});
+}
+function show(id){$(id).classList.add('show')}
+function hideAll(){document.querySelectorAll('.modal-backdrop').forEach(x=>x.classList.remove('show'))}
+function openBudget(id){if(!state.accounts.length){openAccount();return}const chosen=id||selected!=='all'&&selected||state.accounts[0].id;$('budgetAccount').value=chosen;$('budgetValue').value=budgetFor(chosen)||'';show('budgetModal')}
+$('setBudgetBtn').onclick=()=>openBudget();$('budgetAccount').onchange=()=>{$('budgetValue').value=budgetFor($('budgetAccount').value)||''};$('budgetForm').onsubmit=e=>{e.preventDefault();const a=state.accounts.find(x=>x.id===$('budgetAccount').value);if(a){a.budget=Number($('budgetValue').value);save();hideAll();render()}};
+$('prevMonth').onclick=()=>{viewedMonth.setMonth(viewedMonth.getMonth()-1);render()};$('nextMonth').onclick=()=>{viewedMonth.setMonth(viewedMonth.getMonth()+1);render()};
+$('accountIsShop').onchange=()=>{$('accountShopTypeField').style.display=$('accountIsShop').value==='yes'?'block':'none'};
+function openAccount(){$('accountIsShop').value='no';$('accountShopTypeField').style.display='none';show('accountModal');setTimeout(()=>$('accountName').focus(),80)}
+let editingExpenseId=null;
+function editExpense(id){
+ const t=state.transactions.find(x=>x.id===id);if(!t)return;
+ editingExpenseId=id;
+ $('amountModalTitle').textContent='Rediger utgift';$('amountSubmit').textContent='Lagre endringar';
+ $('amountDateField').hidden=false;
+ $('amountAccount').value=t.accountId;renderAmountTypes();updateAmountShop();
+ $('amountValue').value=t.amount;$('amountNote').value=t.note||'';
+ if(t.shop)$('amountShop').value=t.shop;
+ if(t.shopLocation)$('amountShopLocation').value=t.shopLocation;
+ const d=new Date(t.createdAt);$('amountDate').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ show('amountModal');
+}
+function openAmount(){editingExpenseId=null;$('amountModalTitle').textContent='Legg til beløp';$('amountSubmit').textContent='Lagre beløp';$('amountDateField').hidden=true;if(!state.accounts.length){alert('Opprett ein konto først.');openAccount();return}if(selected!=='all'&&state.accounts.some(a=>a.id===selected))$('amountAccount').value=selected;$('amountNote').value='';$('amountValue').value='';renderAmountTypes();updateAmountShop();show('amountModal')}
+$('newAccountBtn').onclick=openAccount;$('addAmountBtn').onclick=openAmount;
+document.querySelectorAll('.close-modal').forEach(b=>b.onclick=hideAll);
+document.querySelectorAll('.modal-backdrop').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)hideAll()}));
+$('accountForm').onsubmit=e=>{e.preventDefault();const name=$('accountName').value.trim();if(!name)return;const id=crypto.randomUUID?crypto.randomUUID():String(Date.now());state.accounts.push({id,name,emoji:$('accountEmoji').value,shopType:$('accountIsShop').value==='yes'?$('accountShopType').value:null});selected=id;save();e.target.reset();hideAll();render()};
+$('amountForm').onsubmit=e=>{
+ e.preventDefault();const amount=Number($('amountValue').value);if(!(amount>0))return;
+ const accountId=$('amountAccount').value,note=$('amountNote').value.trim();
+ const shop=$('amountShopField').style.display==='none'?'':$('amountShop').value.trim();
+ const shopLocation=$('amountShopLocationField').style.display==='none'?'':$('amountShopLocation').value.trim();
+ if(editingExpenseId){
+  const t=state.transactions.find(x=>x.id===editingExpenseId);if(!t)return;
+  const date=$('amountDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+  const [year,month,day]=date.split('-').map(Number);
+  const old=new Date(t.createdAt);
+  const timestamp=new Date(year,month-1,day,old.getHours(),old.getMinutes(),old.getSeconds()).getTime();
+  if(!Number.isFinite(timestamp)||new Date(timestamp).getDate()!==day){alert('Ugyldig dato');return}
+  Object.assign(t,{accountId,amount,note,shop,shopLocation,createdAt:timestamp});
+ }else{
+  state.transactions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),accountId,amount,note,shop,shopLocation,createdAt:(()=>{const now=new Date();if(now.getFullYear()===viewedMonth.getFullYear()&&now.getMonth()===viewedMonth.getMonth())return now.getTime();return new Date(viewedMonth.getFullYear(),viewedMonth.getMonth(),Math.min(now.getDate(),new Date(viewedMonth.getFullYear(),viewedMonth.getMonth()+1,0).getDate()),12).getTime()})()});
+ }
+ editingExpenseId=null;save();e.target.reset();hideAll();render();
+};
+document.querySelectorAll('[data-chart]').forEach(b=>b.onclick=()=>{chartType=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>x.classList.toggle('active',x===b));drawChart()});
+window.addEventListener('resize',drawChart);migrateOldExpenseTypes();render();
+
+</script>
+
+<button class="calc-launch" id="calcLaunch" type="button" aria-label="Opne kalkulator" title="Kalkulator"><img src="data:image/png;base64,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" alt="" aria-hidden="true" class="calc-launch-icon"></button>
+<div class="calc-backdrop" id="calcBackdrop" aria-hidden="true">
+ <section class="calc-panel" role="dialog" aria-modal="true" aria-label="Kalkulator">
+  <div class="calc-top"><span>🧮 Kalkulator</span><button class="calc-close" type="button" id="calcClose" aria-label="Lukk kalkulator">×</button></div>
+  <div class="calc-expression" id="calcExpression" aria-live="polite"></div>
+  <div class="calc-display" id="calcDisplay" aria-live="polite">0</div>
+  <div class="calc-keys" id="calcKeys">
+   <button class="calc-key clear" data-calc="C">C</button><button class="calc-key op" data-calc="±">±</button><button class="calc-key op" data-calc="%">%</button><button class="calc-key op" data-calc="÷">÷</button>
+   <button class="calc-key" data-calc="7">7</button><button class="calc-key" data-calc="8">8</button><button class="calc-key" data-calc="9">9</button><button class="calc-key op" data-calc="×">×</button>
+   <button class="calc-key" data-calc="4">4</button><button class="calc-key" data-calc="5">5</button><button class="calc-key" data-calc="6">6</button><button class="calc-key op" data-calc="−">−</button>
+   <button class="calc-key" data-calc="1">1</button><button class="calc-key" data-calc="2">2</button><button class="calc-key" data-calc="3">3</button><button class="calc-key op" data-calc="+">+</button>
+   <button class="calc-key" data-calc="⌫">⌫</button><button class="calc-key" data-calc="0">0</button><button class="calc-key" data-calc=",">,</button><button class="calc-key equal" data-calc="=">=</button>
+  </div>
+ </section>
+</div>
+<script>
+// Kalkulator – separat frå registreringar og lagra data.
+(function(){
+ const backdrop=document.getElementById('calcBackdrop'),display=document.getElementById('calcDisplay'),expression=document.getElementById('calcExpression');
+ let tokens=['0'], justSolved=false;
+ const pretty=n=>String(n).replace('.',',');
+ const operators=['+','−','×','÷'];
+ function evaluate(parts){
+  if(!parts.length)return null;
+  const work=parts.map(x=>operators.includes(x)?x:Number(x));
+  if(work.some(x=>typeof x==='number'&&!Number.isFinite(x)))return null;
+  if(typeof work[work.length-1]==='string')work.pop();
+  if(!work.length||typeof work[0]!=='number')return null;
+  for(const ops of [['×','÷'],['+','−']]){
+   for(let i=1;i<work.length-1;){
+    if(ops.includes(work[i])){
+     const v=work[i]==='×'?work[i-1]*work[i+1]:work[i]==='÷'?work[i-1]/work[i+1]:work[i]==='+'?work[i-1]+work[i+1]:work[i-1]-work[i+1];
+     if(!Number.isFinite(v))return null;
+     work.splice(i-1,3,v);i=Math.max(1,i-2);
+    }else i+=2;
+   }
+  }
+  return work.length===1&&Number.isFinite(work[0])?Number(work[0].toPrecision(12)):null;
+ }
+ function show(){
+  expression.replaceChildren();
+  tokens.forEach(t=>{
+   const span=document.createElement('span');span.textContent=operators.includes(t)?' '+t+' ':pretty(t);
+   if(operators.includes(t))span.className='calc-operator';
+   expression.appendChild(span);
+  });
+  const cursor=document.createElement('span');cursor.className='calc-cursor';cursor.setAttribute('aria-hidden','true');expression.appendChild(cursor);
+  const result=evaluate(tokens);
+  display.textContent=result===null?'':new Intl.NumberFormat('nb-NO',{maximumFractionDigits:10}).format(result);
+ }
+ function open(){backdrop.classList.add('open');backdrop.setAttribute('aria-hidden','false');document.getElementById('calcClose').focus();show();}
+ function close(){backdrop.classList.remove('open');backdrop.setAttribute('aria-hidden','true');document.getElementById('calcLaunch').focus();}
+ function press(k){
+  if(k==='C'){tokens=['0'];justSolved=false;show();return;}
+  if(k==='='){
+   const v=evaluate(tokens);
+   if(v!==null){tokens=[String(v)];justSolved=true;}
+   show();return;
+  }
+  const last=tokens[tokens.length-1];
+  if(/^[0-9]$/.test(k)){
+   if(justSolved){tokens=['0'];justSolved=false;}
+   const t=tokens[tokens.length-1];
+   if(operators.includes(t))tokens.push(k);
+   else if(t.length<22)tokens[tokens.length-1]=t==='0'?k:t==='-0'?'-'+k:t+k;
+  }else if(k===','){
+   if(justSolved){tokens=['0'];justSolved=false;}
+   const t=tokens[tokens.length-1];
+   if(operators.includes(t))tokens.push('0.');
+   else if(!t.includes('.'))tokens[tokens.length-1]=t+'.';
+  }else if(k==='⌫'){
+   justSolved=false;
+   if(operators.includes(last))tokens.pop();
+   else if(last.length>1)tokens[tokens.length-1]=last.slice(0,-1)==='-'?'0':last.slice(0,-1);
+   else if(tokens.length>1)tokens.pop();else tokens=['0'];
+  }else if(k==='±'){
+   if(!operators.includes(last)&&Number(last)!==0)tokens[tokens.length-1]=String(-Number(last));
+  }else if(k==='%'){
+   if(!operators.includes(last))tokens[tokens.length-1]=String(Number(last)/100);
+  }else if(operators.includes(k)){
+   justSolved=false;
+   if(operators.includes(last))tokens[tokens.length-1]=k;
+   else tokens.push(k);
+  }
+  show();
+ }
+ document.getElementById('calcLaunch').addEventListener('click',open);
+ document.getElementById('calcClose').addEventListener('click',close);
+ backdrop.addEventListener('click',e=>{if(e.target===backdrop)close();});
+ document.getElementById('calcKeys').addEventListener('click',e=>{const b=e.target.closest('[data-calc]');if(b)press(b.dataset.calc);});
+ document.addEventListener('keydown',e=>{if(!backdrop.classList.contains('open'))return;
+  if(e.key==='Escape'){close();return;}
+  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName))return;
+  const map={'/':'÷','*':'×','-':'−','.':',','Backspace':'⌫','Enter':'=','Delete':'C'};const k=map[e.key]||e.key;
+  if(/^[0-9]$/.test(k)||['÷','×','−','+',',','=','%','⌫','C'].includes(k)){e.preventDefault();press(k);}
+ });
+})();
+</script>
+</body>
+</html>
