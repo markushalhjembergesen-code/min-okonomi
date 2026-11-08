@@ -45,7 +45,7 @@ input:focus,select:focus{border-color:var(--accent)}
 .modal-backdrop{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;justify-content:center;padding:12px;z-index:5}
 .modal-backdrop.show{display:flex}.modal{width:min(100%,520px);background:#1b1d24;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 18px 70px #0009}
 .modal h2{margin-bottom:16px}.field{margin:12px 0}.field label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}.modal-actions{display:flex;gap:9px;margin-top:18px}.modal-actions button{flex:1}
-.footer{text-align:center;color:#747b89;font-size:11px;margin:25px 0 0}
+.month-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px}.month-nav button{min-width:42px}.budget-track{height:11px;background:#333641;border-radius:99px;overflow:hidden;margin:10px 0}.budget-fill{height:100%;background:#62d6a6;border-radius:99px;transition:width .2s}.budget-fill.over{background:#ff8585}.budget-meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}.budget-edit{font-size:12px;color:#cbbcff;background:transparent;padding:5px}.footer{text-align:center;color:#747b89;font-size:11px;margin:25px 0 0}
 @media(min-width:600px){.app{padding-top:32px}.modal-backdrop{align-items:center}.account-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
@@ -55,14 +55,16 @@ input:focus,select:focus{border-color:var(--accent)}
  <div class="brand"><div class="logo">◒</div><div><h1>Min økonomi</h1><div class="sub">Oversikt over pengane dine</div></div></div>
  <span class="pill">● Privat</span>
 </header>
+<div class="month-nav"><button class="secondary" id="prevMonth" aria-label="Førre månad">❮</button><strong id="monthLabel"></strong><button class="secondary" id="nextMonth" aria-label="Neste månad">❯</button></div>
 <section class="hero">
  <div class="eyebrow">Totalt registrert forbruk</div>
  <div class="total" id="grandTotal">0 kr</div>
- <div class="hint" id="totalHint">På tvers av alle kontoane dine</div>
+ <div class="hint" id="totalHint">På tvers av alle kontoane dine</div><div id="overallBudget"></div>
 </section>
 
 <div class="section-head"><h2>Mine kontoar</h2><button class="primary" id="newAccountBtn">＋ Opprett konto</button></div>
 <div class="account-grid" id="accounts"></div>
+<div class="section-head"><h2>Budsjett</h2><button class="secondary" id="setBudgetBtn">⚙ Set månadsbudsjett</button></div><section class="panel" id="budgetOverview"></section>
 
 <div class="section-head"><h2 id="chartTitle">Statistikk</h2><span class="small" id="chartSub">Alle kontoar</span></div>
 <section class="panel">
@@ -90,6 +92,7 @@ input:focus,select:focus{border-color:var(--accent)}
   <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Opprett konto</button></div>
  </form>
 </div>
+<div class="modal-backdrop" id="budgetModal"><form class="modal" id="budgetForm"><h2>Set månadsbudsjett</h2><div class="field"><label for="budgetAccount">Konto</label><select id="budgetAccount" required></select></div><div class="field"><label for="budgetValue">Maksbeløp per månad (kr)</label><input id="budgetValue" type="number" min="0" step="0.01" placeholder="Til dømes 1500" required></div><p class="small">Skriv 0 for å fjerne budsjettet. Budsjettet gjeld kvar månad.</p><div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Lagre budsjett</button></div></form></div>
 <div class="modal-backdrop" id="amountModal">
  <form class="modal" id="amountForm">
   <h2>Legg til beløp</h2>
@@ -101,26 +104,33 @@ input:focus,select:focus{border-color:var(--accent)}
 </div>
 <script>
 const KEY='min-okonomi-v1';
-let state=load(), selected='all', chartType='bar';
+let state=load(), selected='all', chartType='bar', viewedMonth=new Date();viewedMonth.setDate(1);
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||{accounts:[],transactions:[]}}catch(e){return {accounts:[],transactions:[]}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function inMonth(t){const d=new Date(t.createdAt);return d.getFullYear()===viewedMonth.getFullYear()&&d.getMonth()===viewedMonth.getMonth()}
+function monthTx(){return state.transactions.filter(inMonth)}
+function budgetFor(id){const a=state.accounts.find(x=>x.id===id);return Number(a?.budget)||0}
+function budgetBar(amount,limit){const over=amount>limit;return `<div class="budget-track"><div class="budget-fill ${over?'over':''}" style="width:${Math.min(100,amount/limit*100)}%"></div></div><div class="budget-meta"><span>${Math.round(amount/limit*100)} % brukt</span><span style="color:${over?'#ff8585':'#62d6a6'}">${over?fmt(amount-limit)+' over budsjett':fmt(limit-amount)+' igjen'}</span></div>`}
 const $=id=>document.getElementById(id);
 const fmt=n=>new Intl.NumberFormat('nb-NO',{maximumFractionDigits:2}).format(n)+' kr';
 const dateFmt=s=>new Intl.DateTimeFormat('nb-NO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(s));
-function totalFor(id){return state.transactions.filter(t=>id==='all'||t.accountId===id).reduce((a,t)=>a+t.amount,0)}
+function totalFor(id){return monthTx().filter(t=>id==='all'||t.accountId===id).reduce((a,t)=>a+t.amount,0)}
 function render(){
+ $('monthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(viewedMonth);
  $('grandTotal').textContent=fmt(totalFor('all'));
- $('totalHint').textContent=state.transactions.length+' registreringar totalt';
+ $('totalHint').textContent=monthTx().length+' registreringar denne månaden';
+ const allBudget=state.accounts.reduce((n,a)=>n+budgetFor(a.id),0);$('overallBudget').innerHTML=allBudget?'<div style="margin-top:15px"><div class="small">Samla månadsbudsjett: '+fmt(allBudget)+'</div>'+budgetBar(totalFor('all'),allBudget)+'</div>':'';
  const host=$('accounts');host.innerHTML='';
  state.accounts.forEach(a=>{
   const b=document.createElement('button');b.className='account'+(selected===a.id?' active':'');
-  b.innerHTML=`<div class="emoji">${a.emoji}</div><div class="name"></div><div class="amount">${fmt(totalFor(a.id))}</div><div class="count">${state.transactions.filter(t=>t.accountId===a.id).length} registreringar</div>`;
+  b.innerHTML=`<div class="emoji">${a.emoji}</div><div class="name"></div><div class="amount">${fmt(totalFor(a.id))}</div><div class="count">${monthTx().filter(t=>t.accountId===a.id).length} registreringar</div>`;
   b.querySelector('.name').textContent=a.name;b.onclick=()=>{selected=selected===a.id?'all':a.id;render()};host.appendChild(b);
  });
+ const budgets=$('budgetOverview');budgets.innerHTML='';if(!state.accounts.length)budgets.innerHTML='<div class="empty">Opprett ein konto for å setje budsjett.</div>';state.accounts.forEach(a=>{const limit=budgetFor(a.id),used=totalFor(a.id),el=document.createElement('div');el.style.padding='9px 0';el.innerHTML='<div class="row"><strong></strong><button class="budget-edit">'+(limit?'Endre':'Set budsjett')+'</button></div>'+(limit?'<div class="small">'+fmt(used)+' av '+fmt(limit)+'</div>'+budgetBar(used,limit):'<div class="small">Ikkje sett noko maksbeløp enno</div>');el.querySelector('strong').textContent=a.emoji+' '+a.name;el.querySelector('button').onclick=()=>openBudget(a.id);budgets.appendChild(el)});
  const add=document.createElement('button');add.className='add-tile';add.innerHTML='＋<br>Opprett ny konto';add.onclick=openAccount;host.appendChild(add);
  $('chartSub').textContent=selected==='all'?'Alle kontoar':(state.accounts.find(a=>a.id===selected)?.name||'Alle kontoar');
  $('historyTitle').textContent=selected==='all'?'Siste registreringar':'Registreringar · '+(state.accounts.find(a=>a.id===selected)?.name||'');
- const txs=state.transactions.filter(t=>selected==='all'||t.accountId===selected).sort((a,b)=>b.createdAt-a.createdAt);
+ const txs=monthTx().filter(t=>selected==='all'||t.accountId===selected).sort((a,b)=>b.createdAt-a.createdAt);
  const h=$('history');h.innerHTML='';
  if(!txs.length){h.innerHTML='<div class="empty">Her kjem registreringane dine når du legg til beløp.</div>'}
  txs.slice(0,100).forEach(t=>{
@@ -130,6 +140,7 @@ function render(){
   el.querySelector('button').onclick=()=>{if(confirm('Vil du slette denne registreringa?')){state.transactions=state.transactions.filter(x=>x.id!==t.id);save();render()}};
   h.appendChild(el);
  });
+ const bsel=$('budgetAccount');bsel.innerHTML='';state.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.emoji+' '+a.name;bsel.appendChild(o)});
  const sel=$('amountAccount');sel.innerHTML='';
  state.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.emoji+' '+a.name;sel.appendChild(o)});
  $('addAmountBtn').disabled=!state.accounts.length;$('addAmountBtn').style.opacity=state.accounts.length?1:.5;
@@ -140,33 +151,36 @@ function drawChart(){
  c.width=rect.width*dpr;c.height=rect.height*dpr;ctx.scale(dpr,dpr);
  const w=rect.width,h=rect.height;ctx.clearRect(0,0,w,h);
  const colors=['#a78bfa','#62d6a6','#f6bd60','#6ec5ff','#ff8585','#d68cff','#f18ab5','#a6d17b'];
- const data=state.accounts.filter(a=>selected==='all'||a.id===selected).map(a=>({label:a.name,value:totalFor(a.id)})).filter(x=>x.value>0);
+ const data=(selected==='all'?state.accounts.map(a=>({label:a.name,value:totalFor(a.id)})):monthTx().filter(t=>t.accountId===selected).reduce((m,t)=>{const day=new Date(t.createdAt).getDate();m[day]=(m[day]||0)+t.amount;return m},{}));const chartData=Array.isArray(data)?data:Object.entries(data).map(([day,value])=>({label:day+'.',value}));
  $('legend').innerHTML='';
- if(!data.length){ctx.fillStyle='#a4a9b5';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('Legg til beløp for å sjå statistikk',w/2,h/2);return}
- data.forEach((x,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:${colors[i%colors.length]}"></i>`;s.append(document.createTextNode(x.label));$('legend').appendChild(s)});
+ if(!chartData.length){ctx.fillStyle='#a4a9b5';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('Legg til beløp for å sjå statistikk',w/2,h/2);return}
+ chartData.forEach((x,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:${colors[i%colors.length]}"></i>`;s.append(document.createTextNode(x.label));$('legend').appendChild(s)});
  if(chartType==='pie'){
-  const sum=data.reduce((a,x)=>a+x.value,0);let start=-Math.PI/2;const r=Math.min(w,h)*.37,cx=w/2,cy=h/2;
-  data.forEach((x,i)=>{const end=start+x.value/sum*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();start=end});
+  const sum=chartData.reduce((a,x)=>a+x.value,0);let start=-Math.PI/2;const r=Math.min(w,h)*.37,cx=w/2,cy=h/2;
+  chartData.forEach((x,i)=>{const end=start+x.value/sum*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();start=end});
   ctx.fillStyle='#f4f5f7';ctx.textAlign='center';ctx.font='bold 17px system-ui';ctx.fillText(fmt(sum),cx,cy+5);return;
  }
- const pad={l:42,r:12,t:15,b:38},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,max=Math.max(...data.map(x=>x.value))*1.15||1;
+ const pad={l:42,r:12,t:15,b:38},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,max=Math.max(...chartData.map(x=>x.value))*1.15||1;
  ctx.strokeStyle='#30343e';ctx.lineWidth=1;ctx.fillStyle='#a4a9b5';ctx.font='10px system-ui';ctx.textAlign='right';
  for(let i=0;i<=4;i++){let y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(max*(1-i/4)).toString(),pad.l-7,y+3)}
- const points=data.map((x,i)=>({x:pad.l+(i+.5)*cw/data.length,y:pad.t+ch-(x.value/max)*ch,v:x.value}));
+ const points=chartData.map((x,i)=>({x:pad.l+(i+.5)*cw/chartData.length,y:pad.t+ch-(x.value/max)*ch,v:x.value}));
  if(chartType==='line'&&points.length>1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#a78bfa';ctx.lineWidth=3;ctx.stroke();points.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#a78bfa';ctx.fill()})}
- else points.forEach((p,i)=>{const bw=Math.min(42,cw/data.length*.55);ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.roundRect(p.x-bw/2,p.y,bw,pad.t+ch-p.y,[5,5,0,0]);ctx.fill()});
+ else points.forEach((p,i)=>{const bw=Math.min(42,cw/chartData.length*.55);ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.roundRect(p.x-bw/2,p.y,bw,pad.t+ch-p.y,[5,5,0,0]);ctx.fill()});
  ctx.textAlign='center';ctx.fillStyle='#a4a9b5';ctx.font='10px system-ui';
- data.forEach((x,i)=>{let label=x.label.length>9?x.label.slice(0,8)+'…':x.label;ctx.fillText(label,points[i].x,h-13)});
+ chartData.forEach((x,i)=>{let label=x.label.length>9?x.label.slice(0,8)+'…':x.label;ctx.fillText(label,points[i].x,h-13)});
 }
 function show(id){$(id).classList.add('show')}
 function hideAll(){document.querySelectorAll('.modal-backdrop').forEach(x=>x.classList.remove('show'))}
+function openBudget(id){if(!state.accounts.length){openAccount();return}const chosen=id||selected!=='all'&&selected||state.accounts[0].id;$('budgetAccount').value=chosen;$('budgetValue').value=budgetFor(chosen)||'';show('budgetModal')}
+$('setBudgetBtn').onclick=()=>openBudget();$('budgetAccount').onchange=()=>{$('budgetValue').value=budgetFor($('budgetAccount').value)||''};$('budgetForm').onsubmit=e=>{e.preventDefault();const a=state.accounts.find(x=>x.id===$('budgetAccount').value);if(a){a.budget=Number($('budgetValue').value);save();hideAll();render()}};
+$('prevMonth').onclick=()=>{viewedMonth.setMonth(viewedMonth.getMonth()-1);render()};$('nextMonth').onclick=()=>{viewedMonth.setMonth(viewedMonth.getMonth()+1);render()};
 function openAccount(){show('accountModal');setTimeout(()=>$('accountName').focus(),80)}
 function openAmount(){if(!state.accounts.length){alert('Opprett ein konto først.');openAccount();return}show('amountModal')}
 $('newAccountBtn').onclick=openAccount;$('addAmountBtn').onclick=openAmount;
 document.querySelectorAll('.close-modal').forEach(b=>b.onclick=hideAll);
 document.querySelectorAll('.modal-backdrop').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)hideAll()}));
 $('accountForm').onsubmit=e=>{e.preventDefault();const name=$('accountName').value.trim();if(!name)return;const id=crypto.randomUUID?crypto.randomUUID():String(Date.now());state.accounts.push({id,name,emoji:$('accountEmoji').value});selected=id;save();e.target.reset();hideAll();render()};
-$('amountForm').onsubmit=e=>{e.preventDefault();const amount=Number($('amountValue').value);if(!(amount>0))return;state.transactions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),accountId:$('amountAccount').value,amount,note:$('amountNote').value.trim(),createdAt:Date.now()});save();e.target.reset();hideAll();render()};
+$('amountForm').onsubmit=e=>{e.preventDefault();const amount=Number($('amountValue').value);if(!(amount>0))return;state.transactions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),accountId:$('amountAccount').value,amount,note:$('amountNote').value.trim(),createdAt:(()=>{const now=new Date();if(now.getFullYear()===viewedMonth.getFullYear()&&now.getMonth()===viewedMonth.getMonth())return now.getTime();return new Date(viewedMonth.getFullYear(),viewedMonth.getMonth(),Math.min(now.getDate(),new Date(viewedMonth.getFullYear(),viewedMonth.getMonth()+1,0).getDate()),12).getTime()})()});save();e.target.reset();hideAll();render()};
 document.querySelectorAll('[data-chart]').forEach(b=>b.onclick=()=>{chartType=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>x.classList.toggle('active',x===b));drawChart()});
 window.addEventListener('resize',drawChart);render();
 </script>
