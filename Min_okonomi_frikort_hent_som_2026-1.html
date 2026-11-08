@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="description" content="Personleg oversikt over forbruket ditt.">
+<title>Min økonomi</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b21;--panel2:#22252d;--line:#30343e;--text:#f4f5f7;--muted:#a4a9b5;--accent:#a78bfa;--green:#62d6a6;--red:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;border:0}
+.app{max-width:760px;margin:auto;padding:22px 16px calc(34px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 0 22px}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,#a78bfa,#6d5ce8);display:grid;place-items:center;font-size:22px}
+.title-edit{background:transparent;color:var(--accent);padding:3px 7px;font-size:17px;vertical-align:middle}.title-line{display:flex;align-items:center;gap:5px}h1{font-size:21px;margin:0;letter-spacing:-.4px}.sub{font-size:12px;color:var(--muted);margin-top:2px}
+.pill{font-size:12px;color:#cbbcff;background:#2b2440;border:1px solid #4b3d70;border-radius:99px;padding:6px 10px}
+.hero{background:linear-gradient(135deg,#27213a,#1b1d26 72%);border:1px solid #40365b;border-radius:22px;padding:20px;margin-bottom:20px}
+.eyebrow{font-size:12px;color:#c5b7ec;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.total{font-size:36px;font-weight:750;letter-spacing:-1.5px;margin:5px 0 2px}.hint{font-size:13px;color:var(--muted)}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:24px 0 12px}
+h2{font-size:17px;margin:0}.small{font-size:12px;color:var(--muted)}
+.primary{background:var(--accent);color:#171322;border-radius:13px;padding:11px 15px;font-weight:750}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.danger{color:var(--red);background:transparent;padding:7px}
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.account{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:15px;text-align:left;color:var(--text);min-height:112px}
+.account.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.account .emoji{font-size:20px}.account .name{font-weight:700;margin-top:8px}.account .amount{font-size:19px;font-weight:750;margin-top:2px}.account .count{font-size:11px;color:var(--muted)}
+.add-tile{border:1px dashed #555b6a;background:transparent;color:var(--muted);border-radius:17px;min-height:112px;font-weight:650}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px}
+.tabs{display:flex;gap:7px;background:#121318;padding:4px;border-radius:12px}
+.tabs button{flex:1;background:transparent;color:var(--muted);padding:8px 5px;border-radius:9px;font-size:13px}
+.tabs button.active{background:#343044;color:#fff}
+.chart-wrap{height:220px;margin-top:12px;position:relative}canvas{width:100%;height:100%;display:block}
+.legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:12px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+select,input{width:100%;background:#111318;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.transaction{display:flex;align-items:center;gap:11px;padding:13px 0;border-bottom:1px solid var(--line)}
+.transaction:last-child{border-bottom:0}.tx-icon{width:38px;height:38px;border-radius:12px;background:var(--panel2);display:grid;place-items:center}
+.tx-main{flex:1;min-width:0}.tx-title{font-weight:650}.tx-date{font-size:12px;color:var(--muted)}.tx-amount{font-weight:750;white-space:nowrap}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:22px 8px}
+.modal-backdrop{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;justify-content:center;padding:12px;z-index:5}
+.modal-backdrop.show{display:flex}.modal{width:min(100%,520px);background:#1b1d24;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 18px 70px #0009}
+.modal h2{margin-bottom:16px}.field{margin:12px 0}.field label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}.modal-actions{display:flex;gap:9px;margin-top:18px}.modal-actions button{flex:1}
+.month-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px}.month-nav button{min-width:42px}.budget-track{height:11px;background:#333641;border-radius:99px;overflow:hidden;margin:10px 0}.budget-fill{height:100%;background:#62d6a6;border-radius:99px;transition:width .2s}.budget-fill.over{background:#ff8585}.budget-meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}.budget-edit{font-size:12px;color:#cbbcff;background:transparent;padding:5px}.footer{text-align:center;color:#747b89;font-size:11px;margin:25px 0 0}
+@media(min-width:600px){.app{padding-top:32px}.modal-backdrop{align-items:center}.account-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+[hidden]{display:none!important}.main-nav{display:flex;gap:9px;margin:0 0 18px}.main-nav button{flex:1}.main-nav button.active{background:var(--accent);color:#171322;font-weight:750}.salary-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}.salary-summary .panel{margin:0}.salary-value{font-size:21px;font-weight:750;margin-top:7px}.salary-positive{color:var(--green)}.salary-negative{color:var(--red)}.salary-company{font-weight:750}.salary-list .transaction{align-items:flex-start}.salary-list .tx-date{margin-top:3px}
+.main-nav{flex-wrap:wrap}.main-nav button{min-width:95px}.owed-total{font-size:30px;font-weight:800;color:#c6b5ff;margin-top:8px}.owed-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}.owed-item:last-child{border-bottom:0}.owed-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.status-pill{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+ <div class="brand"><div class="logo">◒</div><div><div class="title-line"><h1 id="appHeading">Min økonomi</h1><button class="title-edit" id="editHeading" type="button" aria-label="Endre overskrift" title="Endre overskrift">✎</button></div><div class="sub">Oversikt over pengane dine</div></div></div>
+ <span class="pill">● Privat</span>
+</header>
+<nav class="main-nav" aria-label="Hovudmeny"><button type="button" class="secondary active" id="expensesTab" aria-selected="true">💳 Utgifter</button><button type="button" class="secondary" id="salaryTab" aria-selected="false">💰 Lønn</button><button type="button" class="secondary" id="owedTab" aria-selected="false">🤝 Pengar igjen</button></nav>
+<div id="expensesView">
+<div class="month-nav"><button class="secondary" id="prevMonth" aria-label="Førre månad">❮</button><strong id="monthLabel"></strong><button class="secondary" id="nextMonth" aria-label="Neste månad">❯</button></div>
+<section class="hero">
+ <div class="eyebrow">Totalt registrert forbruk</div>
+ <div class="total" id="grandTotal">0 kr</div>
+ <div class="hint" id="totalHint">På tvers av alle kontoane dine</div><div id="overallBudget"></div>
+</section>
+<section id="allExpenseStatsSection" class="panel" aria-label="Samla utgiftsstatistikk" style="margin-top:-8px;margin-bottom:18px">
+ <div class="row"><strong>📊 Samla statistikk – alle kontoar</strong><span class="small" id="allExpenseStatsMonth"></span></div>
+ <p class="small" style="margin:8px 0 12px">Viser alle utgiftene denne månaden, uansett kva konto du har valt.</p>
+ <div class="tabs" role="group" aria-label="Vel diagram" style="margin-bottom:14px">
+  <button id="allStatsBarBtn" type="button" class="active" aria-pressed="true">☰ Liggjande</button>
+  <button id="allStatsVerticalBtn" type="button" aria-pressed="false">▥ Ståande</button>
+  <button id="allStatsPieBtn" type="button" aria-pressed="false">◕ Sektor</button>
+ </div>
+ <div id="allExpenseStats"></div>
+</section>
+
+<div class="section-head"><h2>Mine kontoar</h2><button class="primary" id="newAccountBtn">＋ Opprett konto</button></div>
+<div class="account-grid" id="accounts"></div>
+<div class="section-head"><h2>Budsjett</h2><button class="secondary" id="setBudgetBtn">⚙ Set månadsbudsjett</button></div><section class="panel" id="budgetOverview"></section>
+
+<div id="chartStatsSection" hidden><div class="section-head"><h2 id="chartTitle">Statistikk</h2><span class="small" id="chartSub">Alle kontoar</span></div>
+<section class="panel">
+ <div class="row" style="gap:8px">
+  <div class="tabs" style="flex:1">
+   <button data-chart="bar" class="active">Stolpe</button>
+   <button data-chart="line">Linje</button>
+   <button data-chart="pie">Sektor</button>
+  </div>
+ </div>
+ <div class="chart-wrap"><canvas id="chart"></canvas></div>
+ <div class="legend" id="legend"></div>
+</section></div>
+
+<div id="expenseTypesSection" hidden><div class="section-head"><h2>Mine utgiftstypar</h2><button type="button" class="secondary" id="addExpenseTypeBtn">＋ Legg til type</button></div>
+<section class="panel"><div class="field"><label for="expenseTypeAccount">Vel konto for utgiftstypar</label><select id="expenseTypeAccount"></select></div><div id="expenseTypesList"></div><div id="fixKantinaWrap" style="display:none;margin-top:14px"><button class="secondary" id="fixKantinaBtn" type="button">↪ Flytt Kantina-typar ut av Spel</button><div class="small" style="margin-top:7px">Flyttar berre bagueta, julebrus, monster, Pepsi Max og varm mat til Kantina.</div></div></section>
+</div>
+<div id="shopPresetsSection" hidden>
+<div class="section-head"><h2>Mine butikkar og stader</h2></div>
+<section class="panel">
+
+ <div class="section-head"><h3>Butikkar</h3><button type="button" class="secondary" id="addShopPreset">＋ Legg til butikk</button></div><div id="shopPresetList"></div>
+ <div class="section-head"><h3>Kor ligg butikken?</h3><button type="button" class="secondary" id="addLocationPreset">＋ Legg til stad</button></div><div id="locationPresetList"></div>
+ <p class="small">Kvar konto har sine eigne butikkar og stader. Daglegvarebutikkar og vanlege butikkar blir ikkje blanda.</p>
+</section>
+</div>
+<div id="accountHistorySection" hidden><div class="section-head"><h2 id="historyTitle">Siste registreringar</h2><button class="secondary" id="addAmountBtn">＋ Legg til beløp</button></div>
+<section class="panel" id="history"><div class="empty">Ingen beløp enno. Opprett ein konto og legg til ditt første beløp.</div></section>
+</div>
+<div id="deleteAccountPanel" style="margin-top:28px"><button id="deleteSelectedAccount" type="button" class="danger" style="display:block;width:100%;padding:15px;border-radius:13px">🗑 Slett vald konto</button><p id="deleteAccountHint" class="small" style="text-align:center;margin-top:8px"></p></div>
+
+<p class="footer">Data blir lagra lokalt på denne eininga. Ingen bankkonto er kopla til.</p>
+</div>
+<section id="salaryView" hidden>
+ <div class="month-nav"><button type="button" class="secondary" id="salaryPrev" aria-label="Førre månad">❮</button><strong id="salaryMonthLabel"></strong><button type="button" class="secondary" id="salaryNext" aria-label="Neste månad">❯</button></div>
+ <div class="section-head"><h2>Lønn frå bedrifter</h2></div>
+ <section class="panel"><div class="small">Samla lønn denne månaden</div><div class="salary-value salary-positive" id="salaryTotal">0 kr</div><div class="small" style="margin-top:16px">Samla lønn hittil i <span id="salaryYearLabel"></span></div><div class="salary-value salary-positive" id="salaryYearTotal">0 kr</div><div class="small" style="margin-top:8px">Lønn og utgifter er heilt separate. Du kan rekne sjølv.</div></section>
+ <section class="panel" style="margin-top:14px" aria-label="Frikort-sjekk">
+  <h2 style="margin-top:0">🪪 Frikort-sjekk</h2>
+  <p class="small">Sjekk fødselsåret og kor mykje du har registrert i lønn i år. Frikort har inga øvre aldersgrense.</p>
+  <button type="button" class="secondary" id="frikortReveal" style="width:100%">🔒 Bekreft alder og sjekk frikort</button>
+  <div id="frikortContent" hidden style="margin-top:14px">
+   <div class="field"><label for="frikortBirthYear">Kva år er du fødd?</label><input type="number" id="frikortBirthYear" min="1900" max="2026" step="1" inputmode="numeric" placeholder="Til dømes 2007"></div>
+   <button type="button" class="primary" id="frikortCheck" style="width:100%">Sjekk frikort</button>
+   <div id="frikortResult" role="status" aria-live="polite" style="margin-top:14px" hidden></div>
+  </div>
+  <p class="small" style="margin-top:12px">Frikortgrensa for 2026 er 100 000 kr. For andre år må du kontrollere årsgrensa hos Skatteetaten. Dette er berre ei oversikt, ikkje ei stadfesting frå Skatteetaten. <a href="https://www.skatteetaten.no/person/skatt/skattekort/frikort/" target="_blank" rel="noopener noreferrer">Sjekk frikort hos Skatteetaten</a>.</p>
+ </section>
+ <section class="panel" style="margin-top:14px"><h2 style="margin-top:0">🏢 Kva bedrifter jobbar du i?</h2><p class="small">Legg inn arbeidsplassane dine her. Vel deretter bedrift når du fører lønn.</p><form id="employerAddForm" class="row" style="gap:8px;align-items:end"><div class="field" style="flex:1;margin:0"><label for="newEmployerName">Namn på bedrift</label><input id="newEmployerName" maxlength="70" placeholder="Til dømes Bedrift AS" required></div><button type="submit" class="primary">＋ Legg til</button></form><div id="savedEmployerList" style="margin-top:12px"></div></section>
+ <div class="section-head"><h2>Bedrifter denne månaden</h2><span class="small" id="salaryCount"></span></div><section class="panel" id="salaryCompanies"></section>
+ <div class="section-head"><h2>Lønnsregistreringar</h2><button type="button" class="primary" id="addSalaryBtn">＋ Legg til lønn</button></div><section class="panel salary-list" id="salaryHistory"></section>
+ <p class="footer">Registrer utbetalt lønn manuelt. Opplysningane blir lagra lokalt på denne eininga.</p>
+</section>
+<section id="owedView" hidden>
+ <div class="month-nav"><button type="button" class="secondary" id="owedPrev" aria-label="Førre månad">❮</button><strong id="owedMonthLabel"></strong><button type="button" class="secondary" id="owedNext" aria-label="Neste månad">❯</button></div>
+ <div class="section-head"><h2>Pengar eg ventar på</h2><button type="button" class="primary" id="addOwedBtn">＋ Legg til person</button></div>
+ <section class="panel"><div class="small">Totalt du ikkje har fått enno</div><div class="owed-total" id="owedTotal">0 kr</div><div class="small">Berre beløp med status «Ikkje fått» blir rekna med.</div></section>
+ <div class="section-head"><h2>Ikkje fått</h2></div><section class="panel" id="owedPending"></section>
+ <div class="section-head"><h2>Fått</h2></div><section class="panel" id="owedReceived"></section>
+ <p class="footer">Denne oversikta er heilt separat frå lønn og utgifter. Data blir lagra på eininga di.</p>
+</section>
+<div id="resetAllPanel" style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line)">
+ <button id="resetAllData" type="button" class="secondary" style="display:block;width:100%;padding:15px;border-radius:13px">↺ Tilbakestill alt</button>
+ <p class="small" style="text-align:center;margin-top:8px">Slett alle kontoar, utgifter, budsjett, utgiftstypar, butikkar, lønn og pengar igjen. Appen blir som ny.</p>
+</div>
+</main>
+
+<div class="modal-backdrop" id="accountModal">
+ <form class="modal" id="accountForm">
+  <h2>Opprett konto</h2>
+  <div class="field"><label for="accountName">Namn på kontoen</label><input id="accountName" maxlength="28" placeholder="Til dømes Kantina" required></div>
+  <div class="field"><label for="accountIsShop">Skal denne kontoen brukast til butikk?</label><select id="accountIsShop"><option value="no">Nei</option><option value="yes">Ja</option></select></div>
+  <div class="field" id="accountShopTypeField" style="display:none"><label for="accountShopType">Kva slags butikk?</label><select id="accountShopType"><option value="daglegvare">Daglegvarebutikk</option><option value="butikk">Butikk</option></select></div>
+  <div class="field"><label for="accountEmoji">Symbol</label><select id="accountEmoji"><option>🍽️</option><option>🛒</option><option>🚗</option><option>☕</option><option>🎮</option><option>🏠</option><option>🎉</option><option>📦</option><option>💳</option></select></div>
+  <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Opprett konto</button></div>
+ </form>
+</div>
+<div class="modal-backdrop" id="budgetModal"><form class="modal" id="budgetForm"><h2>Set månadsbudsjett</h2><div class="field"><label for="budgetAccount">Konto</label><select id="budgetAccount" required></select></div><div class="field"><label for="budgetValue">Maksbeløp per månad (kr)</label><input id="budgetValue" type="number" min="0" step="0.01" placeholder="Til dømes 1500" required></div><p class="small">Skriv 0 for å fjerne budsjettet. Budsjettet gjeld kvar månad.</p><div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Lagre budsjett</button></div></form></div>
+<div class="modal-backdrop" id="amountModal">
+ <form class="modal" id="amountForm">
+  <h2 id="amountModalTitle">Legg til beløp</h2>
+  <div class="field"><label for="amountAccount">Konto</label><select id="amountAccount" required></select></div>
+  <div class="field" id="amountShopField" style="display:none"><label for="amountShop">Kva butikk handla du på?</label><select id="amountShop"></select></div>
+  <div class="field" id="amountShopLocationField" style="display:none"><label for="amountShopLocation">Kor ligg butikken?</label><select id="amountShopLocation"></select></div>
+  <div class="field"><label for="amountValue">Beløp i kroner</label><input id="amountValue" type="number" min="0.01" step="0.01" placeholder="Til dømes 50" required></div>
+  <div class="field"><label for="amountSavedType">Vel ein lagra utgiftstype (fyller inn pris automatisk)</label><select id="amountSavedType"><option value="">Vel type eller skriv sjølv under</option></select></div>
+  <div class="field"><label for="amountNote">Kva gjaldt kjøpet? (valfritt)</label><input id="amountNote" maxlength="50" placeholder="Til dømes lunsj"></div>
+  <div class="field" id="amountDateField" hidden><label for="amountDate">Dato</label><input id="amountDate" type="date"></div>
+  <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit" id="amountSubmit">Lagre beløp</button></div>
+ </form>
+</div>
+<div class="modal-backdrop" id="salaryModal"><form class="modal" id="salaryForm">
+ <h2>Legg til lønn</h2>
+ <div class="field"><label for="salarySavedEmployer">Vel arbeidsplass</label><select id="salarySavedEmployer"><option value="">Vel bedrift</option></select></div>
+ <div class="field" id="salaryEmployerField" hidden><label for="salaryEmployer">Ny bedrift / arbeidsgivar</label><input id="salaryEmployer" maxlength="70" placeholder="Til dømes Bedrift AS"></div>
+ <div class="field"><label for="salaryAmount">Utbetalt lønn (kr)</label><input id="salaryAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Til dømes 25000" required></div>
+ <div class="field"><label for="salaryDate">Utbetalingsdato</label><input id="salaryDate" type="date" required></div>
+ <div class="field"><label for="salaryNote">Merknad (valfritt)</label><input id="salaryNote" maxlength="100" placeholder="Til dømes ekstravakt"></div>
+ <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button class="primary" type="submit">Lagre lønn</button></div>
+</form></div>
+<div class="modal-backdrop" id="owedModal"><form class="modal" id="owedForm">
+ <h2 id="owedModalTitle">Legg til pengar du ventar på</h2>
+ <div class="field"><label for="owedSavedPerson">Vel ein person du har brukt før</label><select id="owedSavedPerson"><option value="">＋ Ny person / skriv namn under</option></select></div>
+ <div class="field"><label for="owedPerson">Namn på person</label><input id="owedPerson" maxlength="70" placeholder="Til dømes Pappa" required></div>
+ <div class="field"><label for="owedAmount">Beløp (kr)</label><input id="owedAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required></div>
+ <div class="field"><label style="display:flex;align-items:center;gap:10px"><input id="owedSplit" type="checkbox" style="width:auto"> Del beløpet mellom fleire personar</label></div>
+ <div class="field" id="owedSplitFields" hidden><label for="owedSplitCount">Kor mange personar skal få kvar sin registrering?</label><input id="owedSplitCount" type="number" min="2" max="1000" step="1" inputmode="numeric" value="2"><div class="field" style="margin-top:12px"><label style="display:flex;align-items:center;gap:10px"><input id="owedSplitMe" type="checkbox" style="width:auto"> Er det deg? (din del skal ikkje loggførast)</label></div><div class="small" id="owedSplitPreview" style="margin-top:8px"></div></div>
+ <div class="field"><label for="owedDate">Dato du la det inn</label><input id="owedDate" type="date" required></div>
+ <div class="field"><label for="owedNote">Merknad (valfritt)</label><input id="owedNote" maxlength="100" placeholder="Til dømes pengar for middag"></div>
+ <div class="field"><label for="owedStatus">Status</label><select id="owedStatus"><option value="pending">Ikkje fått</option><option value="received">Fått</option></select></div>
+ <div class="modal-actions"><button type="button" class="secondary close-modal">Avbryt</button><button type="submit" class="primary" id="owedSaveBtn">Lagre</button></div>
+</form></div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>new Intl.NumberFormat('nb-NO',{maximumFractionDigits:2}).format(n)+' kr';
+const KEY='min-okonomi-v1';
+const HEADING_KEY='min-okonomi-heading-v1';
+
+const EXPENSE_TYPES_KEY='min-okonomi-expense-types-v1';
+const ACCOUNT_EXPENSE_TYPES_KEY='min-okonomi-expense-types-by-account-v1';
+function normaliseType(x){
+ if(typeof x==='string')return {name:x,price:null};
+ if(!x||typeof x.name!=='string')return null;
+ return {name:x.name,price:Number(x.price)>0?Number(x.price):null};
+}
+function loadExpenseTypesByAccount(){
+ try{
+  const data=JSON.parse(localStorage.getItem(ACCOUNT_EXPENSE_TYPES_KEY));
+  if(data&&typeof data==='object'&&!Array.isArray(data))return data;
+ }catch(e){}
+ return {};
+}
+let expenseTypesByAccount=loadExpenseTypesByAccount();
+function saveExpenseTypes(){localStorage.setItem(ACCOUNT_EXPENSE_TYPES_KEY,JSON.stringify(expenseTypesByAccount))}
+function typesFor(id){
+ if(!id)return [];
+ if(!Array.isArray(expenseTypesByAccount[id]))expenseTypesByAccount[id]=[];
+ return expenseTypesByAccount[id];
+}
+function migrateOldExpenseTypes(){
+ if(localStorage.getItem(ACCOUNT_EXPENSE_TYPES_KEY)!==null)return;
+ let old=[];
+ try{const a=JSON.parse(localStorage.getItem(EXPENSE_TYPES_KEY));if(Array.isArray(a))old=a.map(normaliseType).filter(Boolean)}catch(e){}
+ // Gamle felles typar blir berre flytta til første konto, ikkje kopierte til alle.
+ if(old.length&&state.accounts.length)expenseTypesByAccount[state.accounts[0].id]=old.map(x=>({...x}));
+ saveExpenseTypes();
+}
+function renderExpenseTypes(){
+ const host=$('expenseTypesList'),sel=$('amountSavedType'),manage=$('expenseTypeAccount');
+ const previous=manage.value;
+ manage.innerHTML='';
+ state.accounts.forEach(a=>{const opt=document.createElement('option');opt.value=a.id;opt.textContent=a.emoji+' '+a.name;manage.appendChild(opt)});
+ if(selected!=='all'&&state.accounts.some(a=>a.id===selected))manage.value=selected;
+ else if(state.accounts.some(a=>a.id===previous))manage.value=previous;
+ const accountId=manage.value;
+ host.innerHTML='';
+ if(!accountId){host.textContent='Opprett ein konto først.';return}
+ const types=typesFor(accountId);
+ const activeAccount=state.accounts.find(a=>a.id===accountId);
+ const kantina=state.accounts.find(a=>a.name.trim().toLocaleLowerCase('nb-NO')==='kantina');
+ const isSpel=activeAccount&&activeAccount.name.trim().toLocaleLowerCase('nb-NO')==='spel';
+ const kantinaNames=['bagueta','julebrus','monster','pepsi max','varm mat'];
+ $('fixKantinaWrap').style.display=(isSpel&&kantina&&types.some(t=>kantinaNames.includes(t.name.trim().toLocaleLowerCase('nb-NO'))))?'block':'none';
+ if(!types.length)host.innerHTML='<div class="small">Ingen lagra typar for denne kontoen enno.</div>';
+ types.forEach(type=>{
+  const row=document.createElement('div');row.className='row';row.style.padding='9px 0';
+  const info=document.createElement('div');
+  const name=document.createElement('strong');name.textContent=type.name;
+  const price=document.createElement('div');price.className='small';price.textContent=type.price!==null?fmt(type.price):'Ingen fast pris';
+  info.append(name,price);
+  const actions=document.createElement('div');actions.style.display='flex';actions.style.gap='6px';
+  const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='Endre pris';
+  edit.onclick=()=>{
+   const value=prompt('Fast pris for '+type.name+' i kr (tomt = ingen fast pris):',type.price===null?'':String(type.price));
+   if(value===null)return;
+   const n=Number(value.replace(',','.').trim());
+   if(value.trim()!==''&&(!(n>0)||!Number.isFinite(n))){alert('Skriv ein gyldig pris større enn 0.');return}
+   type.price=value.trim()===''?null:Math.round(n*100)/100;
+   saveExpenseTypes();renderExpenseTypes();
+  };
+  const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Slett';
+  del.onclick=()=>{if(confirm('Slette utgiftstypen '+type.name+' frå denne kontoen? Gamle utgifter blir ikkje sletta.')){expenseTypesByAccount[accountId]=types.filter(x=>x!==type);saveExpenseTypes();renderExpenseTypes()}};
+  actions.append(edit,del);row.append(info,actions);host.appendChild(row);
+ });
+}
+function renderAmountTypes(){
+ const sel=$('amountSavedType'),accountId=$('amountAccount').value;
+ sel.innerHTML='<option value="">Vel type eller skriv sjølv under</option>';
+ typesFor(accountId).forEach(type=>{
+  const opt=document.createElement('option');opt.value=type.name;opt.textContent=type.name+(type.price!==null?' – '+fmt(type.price):'');sel.appendChild(opt);
+ });
+}
+const SHOP_PRESETS_KEY='min-okonomi-shop-presets-v1';
+let shopPresets={};
+try{const x=JSON.parse(localStorage.getItem(SHOP_PRESETS_KEY));if(x&&typeof x==='object'&&!Array.isArray(x))shopPresets=x}catch(e){}
+function presetsFor(id){if(!shopPresets[id])shopPresets[id]={shops:[],locations:[]};return shopPresets[id]}
+function saveShopPresets(){localStorage.setItem(SHOP_PRESETS_KEY,JSON.stringify(shopPresets))}
+function renderShopPresets(){
+ const account=state.accounts.find(a=>a.id===selected);
+ const visible=!!(account&&(account.shopType==='daglegvare'||account.shopType==='butikk'));
+ $('shopPresetsSection').hidden=!visible;
+ const id=visible?account.id:null;
+ for(const [key,hostId] of [['shops','shopPresetList'],['locations','locationPresetList']]){
+  const host=$(hostId);host.innerHTML='';
+  if(!id){host.textContent='Vel ein daglegvare- eller butikkonto først.';continue}
+  const items=presetsFor(id)[key];
+  if(!items.length){const hint=document.createElement('p');hint.className='small';hint.textContent='Ingen lagra '+(key==='shops'?'butikkar':'stader')+' enno.';host.appendChild(hint)}
+  items.forEach(item=>{
+   const row=document.createElement('div');row.className='row';row.style.padding='8px 0';
+   const label=document.createElement('strong');label.textContent=item;
+   const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Slett';
+   del.onclick=()=>{if(confirm('Slette '+item+' frå lista? Tidlegare utgifter blir ikkje sletta.')){presetsFor(id)[key]=items.filter(x=>x!==item);saveShopPresets();renderShopPresets()}};
+   row.append(label,del);host.appendChild(row);
+  });
+ }
+}
+function addPreset(key){
+ const account=state.accounts.find(a=>a.id===selected);
+ const id=account&&(account.shopType==='daglegvare'||account.shopType==='butikk')?account.id:null;
+ if(!id){alert('Vel ein butikkonto under Mine kontoar først.');return}
+ const label=key==='shops'?'butikk':'stad';const value=prompt('Namn på '+label+':');if(value===null)return;
+ const name=value.trim();if(!name)return;
+ if(name.length>100){alert('Namnet er for langt.');return}
+ const list=presetsFor(id)[key];
+ if(list.some(x=>x.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){alert('Denne finst allereie.');return}
+ list.push(name);list.sort((a,b)=>a.localeCompare(b,'nb-NO'));saveShopPresets();renderShopPresets();
+}
+$('addShopPreset').onclick=()=>addPreset('shops');
+$('addLocationPreset').onclick=()=>addPreset('locations');
+function updateAmountShop(){
+ const account=state.accounts.find(a=>a.id===$('amountAccount').value);
+ const enabled=!!(account&&account.shopType);
+ $('amountShopField').style.display=enabled?'block':'none';
+ $('amountShopLocationField').style.display=enabled?'block':'none';
+ $('amountShop').required=enabled;
+ for(const [key,id,placeholder] of [['shops','amountShop','Vel butikk'],['locations','amountShopLocation','Vel stad (valfritt)']]){
+  const sel=$(id);sel.innerHTML='';
+  const first=document.createElement('option');first.value='';first.textContent=placeholder;sel.appendChild(first);
+  if(enabled){
+   // Tidlegare registrerte namn blir også tilgjengelege som val.
+   const historic=state.transactions.filter(t=>t.accountId===account.id).map(t=>key==='shops'?t.shop:t.shopLocation).filter(Boolean);
+   const names=[...new Set([...presetsFor(account.id)[key],...historic])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+   names.forEach(name=>{const opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.appendChild(opt)});
+  }
+ }
+}
+$('expenseTypeAccount').onchange=renderExpenseTypes;
+$('fixKantinaBtn').onclick=()=>{
+ const from=state.accounts.find(a=>a.id===$('expenseTypeAccount').value);
+ const to=state.accounts.find(a=>a.name.trim().toLocaleLowerCase('nb-NO')==='kantina');
+ if(!from||from.name.trim().toLocaleLowerCase('nb-NO')!=='spel'||!to)return;
+ const names=['bagueta','julebrus','monster','pepsi max','varm mat'];
+ const fromTypes=typesFor(from.id),toTypes=typesFor(to.id);
+ const moving=fromTypes.filter(t=>names.includes(t.name.trim().toLocaleLowerCase('nb-NO')));
+ if(!moving.length)return;
+ if(!confirm('Flytte '+moving.length+' utgiftstypar frå Spel til Kantina? Ingen registrerte utgifter blir sletta.'))return;
+ moving.forEach(t=>{if(!toTypes.some(x=>x.name.trim().toLocaleLowerCase('nb-NO')===t.name.trim().toLocaleLowerCase('nb-NO')))toTypes.push({...t})});
+ expenseTypesByAccount[from.id]=fromTypes.filter(t=>!moving.includes(t));
+ saveExpenseTypes();renderExpenseTypes();alert('Ferdig! Kantina-typane er ikkje lenger på Spel.');
+};
+$('amountAccount').onchange=()=>{renderAmountTypes();updateAmountShop();$('amountNote').value='';$('amountValue').value=''};
+$('addExpenseTypeBtn').onclick=()=>{
+ const accountId=$('expenseTypeAccount').value;
+ if(!accountId){alert('Opprett ein konto først.');return}
+ const nameInput=prompt('Namn på ny utgiftstype:');if(nameInput===null)return;
+ const name=nameInput.trim();if(!name)return;
+ if(name.length>50){alert('Maks 50 teikn.');return}
+ const types=typesFor(accountId);
+ if(types.some(x=>x.name.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){alert('Denne typen finst allereie på denne kontoen.');return}
+ const priceInput=prompt('Kva kostar '+name+'? Pris i kr (eller tomt dersom prisen varierer):','');
+ if(priceInput===null)return;
+ const n=Number(priceInput.replace(',','.').trim());
+ if(priceInput.trim()!==''&&(!(n>0)||!Number.isFinite(n))){alert('Skriv ein gyldig pris større enn 0.');return}
+ types.push({name,price:priceInput.trim()===''?null:Math.round(n*100)/100});
+ types.sort((a,b)=>a.name.localeCompare(b.name,'nb-NO'));saveExpenseTypes();renderExpenseTypes();
+};
+$('amountSavedType').onchange=()=>{
+ const type=typesFor($('amountAccount').value).find(x=>x.name===$('amountSavedType').value);
+ if(type){$('amountNote').value=type.name;if(type.price!==null)$('amountValue').value=type.price}
+};
+
+function updateHeading(){const heading=(localStorage.getItem(HEADING_KEY)||'Min økonomi').trim();document.getElementById('appHeading').textContent=heading;document.title=heading;}
+document.getElementById('editHeading').addEventListener('click',()=>{const current=document.getElementById('appHeading').textContent;const name=prompt('Kva skal appen heite?',current);if(name===null)return;const cleaned=name.trim();if(!cleaned){alert('Skriv inn eit namn.');return;}if(cleaned.length>40){alert('Namnet kan ha maks 40 teikn.');return;}localStorage.setItem(HEADING_KEY,cleaned);updateHeading();});
+updateHeading();
+let state=load(), selected='all', chartType='bar', viewedMonth=new Date();viewedMonth.setDate(1);
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{accounts:[],transactions:[]}}catch(e){return {accounts:[],transactions:[]}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+const SALARY_KEY='min-okonomi-salary-v1';
+function loadSalary(){try{const data=JSON.parse(localStorage.getItem(SALARY_KEY));return Array.isArray(data)?data:[]}catch(e){return []}}
+let salaryEntries=loadSalary();
+const SALARY_EMPLOYERS_KEY='min-okonomi-salary-employers-v1';
+function loadSalaryEmployers(){try{const a=JSON.parse(localStorage.getItem(SALARY_EMPLOYERS_KEY));return Array.isArray(a)?a.filter(x=>typeof x==='string'):[]}catch(e){return []}}
+let salaryEmployers=loadSalaryEmployers();
+function rememberSalaryEmployer(name){if(!salaryEmployers.some(x=>x.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){salaryEmployers.push(name);localStorage.setItem(SALARY_EMPLOYERS_KEY,JSON.stringify(salaryEmployers))}}
+function refreshSalaryEmployers(){
+ const select=$('salarySavedEmployer');select.replaceChildren();
+ const names=[...new Set([...salaryEmployers,...salaryEntries.map(x=>x.employer).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+ for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.append(opt)}
+ const other=document.createElement('option');other.value='__new__';other.textContent='＋ Skriv inn ny bedrift';select.append(other);
+ select.value=names.length?names[0]:'__new__';updateEmployerChoice();
+}
+function updateEmployerChoice(){const custom=$('salarySavedEmployer').value==='__new__';$('salaryEmployerField').hidden=!custom;$('salaryEmployer').required=custom;if(!custom)$('salaryEmployer').value=''}
+$('salarySavedEmployer').onchange=updateEmployerChoice;
+$('employerAddForm').onsubmit=e=>{e.preventDefault();const name=$('newEmployerName').value.trim();if(!name)return;rememberSalaryEmployer(name);$('newEmployerName').value='';renderSalary()};
+function renderEmployerList(){
+ const host=$('savedEmployerList');host.replaceChildren();
+ const names=[...new Set([...salaryEmployers,...salaryEntries.map(x=>x.employer).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));
+ if(!names.length){const empty=document.createElement('div');empty.className='small';empty.textContent='Ingen bedrifter lagra enno.';host.append(empty);return}
+ names.forEach(name=>{const line=document.createElement('div');line.className='transaction';const label=document.createElement('strong');label.textContent='🏢 '+name;const actions=document.createElement('div');actions.style.cssText='display:flex;gap:6px';
+ const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.textContent='×';remove.setAttribute('aria-label','Fjern lagra bedrift '+name);remove.onclick=()=>{if(!confirm('Fjerne «'+name+'» frå lista over arbeidsplassar? Tidlegare lønn blir ikkje sletta.'))return;salaryEmployers=salaryEmployers.filter(x=>x!==name);localStorage.setItem(SALARY_EMPLOYERS_KEY,JSON.stringify(salaryEmployers));renderSalary()};
+ actions.append(remove);line.append(label,actions);host.append(line)})
+}
+let salaryMonth=new Date(); salaryMonth.setDate(1);
+function saveSalary(){localStorage.setItem(SALARY_KEY,JSON.stringify(salaryEntries));if(typeof refreshVisibleFrikort==='function')refreshVisibleFrikort()}
+function salaryInMonth(item){const d=new Date(item.date+'T12:00:00');return d.getFullYear()===salaryMonth.getFullYear()&&d.getMonth()===salaryMonth.getMonth()}
+function salaryMonthEntries(){return salaryEntries.filter(salaryInMonth)}
+const FRIKORT_LIMIT_2026=100000;
+function frikortLimitForYear(year){return year===2026?FRIKORT_LIMIT_2026:(Number(localStorage.getItem('min-okonomi-frikort-limit-'+year))||FRIKORT_LIMIT_2026);}
+let refreshVisibleFrikort=null;
+let frikortDisplayedYear=salaryMonth.getFullYear();
+let frikortOverviewOpen=false;
+function checkFrikortYearChange(){
+ const selectedYear=salaryMonth.getFullYear();
+ if(selectedYear===frikortDisplayedYear)return;
+ const wasOpen=frikortOverviewOpen;
+ frikortDisplayedYear=selectedYear;
+ frikortOverviewOpen=false;
+ refreshVisibleFrikort=null;
+ $('frikortBirthYear').max=String(selectedYear);
+ const birthYear=Number($('frikortBirthYear').value);
+ if($('frikortContent').hidden)return;
+ $('frikortBirthYear').closest('.field').hidden=false;
+ $('frikortCheck').hidden=false;
+ $('frikortResult').hidden=true;
+ $('frikortResult').replaceChildren();
+ $('frikortReveal').textContent='🔓 Skjul frikort-sjekk';
+ if(Number.isInteger(birthYear)&&birthYear>=1900&&birthYear<=selectedYear){
+  updateFrikort();
+  if(wasOpen){
+   const fetchButton=[...$('frikortResult').querySelectorAll('button')].find(b=>b.textContent.includes('Hent frikort'));
+   if(fetchButton)fetchButton.click();
+  }
+ }
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkFrikortYearChange()});
+window.addEventListener('focus',checkFrikortYearChange);
+setInterval(checkFrikortYearChange,60000);
+$('frikortReveal').onclick=()=>{
+ checkFrikortYearChange();
+ refreshVisibleFrikort=null;
+ const content=$('frikortContent');
+ if(frikortOverviewOpen){
+  // Ved nytt søk skal brukaren få sjekken for det valde lønnsåret på nytt.
+  frikortOverviewOpen=false;
+  content.hidden=false;
+  $('frikortBirthYear').closest('.field').hidden=false;
+  $('frikortCheck').hidden=false;
+  $('frikortResult').hidden=true;
+  $('frikortResult').replaceChildren();
+  $('frikortReveal').textContent='🔓 Skjul frikort-sjekk';
+  return;
+ }
+ content.hidden=!content.hidden;
+ $('frikortReveal').textContent=content.hidden?'🔒 Bekreft alder og sjekk frikort':'🔓 Skjul frikort-sjekk';
+};
+function updateFrikort(){
+ frikortDisplayedYear=salaryMonth.getFullYear();
+ refreshVisibleFrikort=null;
+ const result=$('frikortResult');const year=Number($('frikortBirthYear').value);const currentYear=salaryMonth.getFullYear();
+ $('frikortBirthYear').max=String(currentYear);
+ result.hidden=false;result.replaceChildren();
+ if(!Number.isInteger(year)||year<1900||year>currentYear){result.textContent='Skriv inn eit gyldig fødselsår.';return;}
+ const age=currentYear-year;
+ const paragraph=document.createElement('p');paragraph.textContent='Du fyller '+age+' år i '+currentYear+'. Det finst inga øvre aldersgrense for frikort.';result.appendChild(paragraph);
+ if(age<13){const note=document.createElement('p');note.textContent='For barn under 13 år gjeld eigne reglar. Kontakt Skatteetaten.';result.appendChild(note);return;}
+ const yearPrefix=String(currentYear)+'-';
+ let yearLimit=frikortLimitForYear(currentYear);
+ // Same 'Hent frikort' flow for every year. For later years, 2026's limit
+ // is only a temporary estimate until the user has checked that year's limit.
+ if(currentYear!==2026&&!localStorage.getItem('min-okonomi-frikort-limit-'+currentYear)){
+  const note=document.createElement('p');note.className='small';
+  note.textContent='Merk: '+fmt(yearLimit)+' er førebels grense frå 2026. Kontroller frikortgrensa for '+currentYear+' hos Skatteetaten.';
+  result.appendChild(note);
+ }
+ const sum=salaryEntries.filter(x=>x.date&&x.date.startsWith(yearPrefix)).reduce((total,x)=>total+Number(x.amount||0),0);
+ const left=Math.max(0,yearLimit-sum);
+ const strong=document.createElement('strong');strong.textContent='Registrert lønn i '+currentYear+': '+fmt(sum);result.appendChild(strong);
+ const rest=document.createElement('p');rest.textContent=sum<=yearLimit?'Igjen til frikortgrensa: '+fmt(left):'Du har registrert '+fmt(sum-yearLimit)+' over frikortgrensa.';result.appendChild(rest);
+ const getCard=document.createElement('button');getCard.type='button';getCard.textContent='📊 Hent frikort';getCard.className='primary';getCard.style.cssText='display:block;width:100%;text-align:center;padding:13px 16px;border-radius:12px;margin:12px 0;font-weight:700;background:#8059d6;color:white';result.appendChild(getCard);
+ const overview=document.createElement('div');overview.hidden=true;overview.style.cssText='padding:14px;border:1px solid var(--line);border-radius:13px;margin:12px 0';result.appendChild(overview);
+ const redrawOverview=()=>{
+  if(salaryMonth.getFullYear()!==currentYear){updateFrikort();return;}
+  const sum=salaryEntries.filter(x=>x.date&&x.date.startsWith(yearPrefix)).reduce((total,x)=>total+Number(x.amount||0),0);
+  const left=Math.max(0,yearLimit-sum);
+  overview.replaceChildren();
+  overview.style.cssText='padding:18px 14px;border:1px solid var(--line);border-radius:18px;margin:12px 0;background:#111116';
+  const heading=document.createElement('h3');heading.textContent='📊 Di frikortoversikt – '+currentYear;heading.style.cssText='margin:0 0 25px;font-size:21px';overview.appendChild(heading);
+  const columns=document.createElement('div');columns.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px';
+  for(const [label,value,color] of [['Totalt tent',sum,'#fff'],['Igjen av frikortet',left,'#16c46c']]){
+   const cell=document.createElement('div');
+   const name=document.createElement('div');name.className='small';name.textContent=label;name.style.marginBottom='12px';
+   const amount=document.createElement('strong');amount.textContent=fmt(value);amount.style.cssText='font-size:clamp(19px,5vw,30px);color:'+color+';white-space:nowrap';
+   cell.append(name,amount);columns.appendChild(cell);
+  }
+  overview.appendChild(columns);
+  const track=document.createElement('div');track.setAttribute('role','progressbar');track.setAttribute('aria-label','Brukt del av frikortgrensa');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(Math.min(100,Math.round(sum/yearLimit*100))));track.style.cssText='width:100%;height:20px;background:#343434;border-radius:999px;overflow:hidden';
+  const fill=document.createElement('div');fill.style.cssText='height:100%;width:'+Math.min(100,Math.max(0,sum/yearLimit*100))+'%;background:'+(sum>yearLimit?'#f87171':'#a78bfa')+';border-radius:999px';track.appendChild(fill);overview.appendChild(track);
+  const foot=document.createElement('div');foot.style.cssText='display:flex;justify-content:space-between;gap:10px;margin-top:14px';
+  const percent=document.createElement('span');percent.className='small';percent.textContent=Math.round(sum/yearLimit*100)+' % brukt';
+  const limit=document.createElement('span');limit.className='small';limit.textContent='Grense: '+fmt(yearLimit);foot.append(percent,limit);overview.appendChild(foot);
+  if(sum>yearLimit){
+   const taxBox=document.createElement('div');taxBox.style.cssText='margin-top:18px;padding:14px;border:1px solid #8059d6;border-radius:12px;background:#211c30';
+   const title=document.createElement('strong');title.textContent='💰 Skatt når du er over frikortgrensa';taxBox.appendChild(title);
+   const label=document.createElement('label');label.htmlFor='frikortTaxPercent';label.textContent='Skattetrekk i prosent frå skattekortet ditt';label.style.cssText='display:block;margin:10px 0 6px';
+   const input=document.createElement('input');input.type='number';input.id='frikortTaxPercent';input.min='0';input.max='100';input.step='0.1';input.inputMode='decimal';input.placeholder='Skriv inn prosenten din';input.value=localStorage.getItem('min-okonomi-tax-percent')||'';
+   const search=document.createElement('button');search.type='button';search.textContent='🔎 Søk';search.style.marginTop='12px';
+   const estimate=document.createElement('div');estimate.style.cssText='margin-top:12px;font-weight:700';estimate.hidden=true;
+   search.onclick=()=>{
+    const raw=input.value.trim().replace(',','.');
+    const pct=Number(raw);
+    estimate.hidden=false;
+    if(!raw||!Number.isFinite(pct)||pct<0||pct>100){estimate.textContent='Skriv inn ein gyldig skatteprosent mellom 0 og 100.';return;}
+    localStorage.setItem('min-okonomi-tax-percent',raw);
+    estimate.replaceChildren();
+    const heading=document.createElement('div');heading.textContent='Å betale i skatt (overslag)';
+    const value=document.createElement('div');value.style.cssText='font-size:24px;margin-top:6px;color:#62d6a6';value.textContent=fmt(sum*pct/100);
+    estimate.append(heading,value);
+    const again=document.createElement('button');
+    again.type='button';
+    again.textContent='🔎 Søk på nytt';
+    again.style.cssText='display:block;width:100%;margin-top:16px';
+    again.onclick=()=>{
+     estimate.hidden=true;
+     taxBox.replaceChildren(title,label,input,search,estimate);
+     input.focus();
+    };
+    taxBox.replaceChildren(estimate,again);
+   };
+   input.addEventListener('input',()=>{estimate.hidden=true});
+   taxBox.append(label,input,search,estimate);
+   overview.appendChild(taxBox);
+  }
+  const disclaimer=document.createElement('p');disclaimer.className='small';disclaimer.style.marginTop='18px';disclaimer.textContent='Basert på lønn registrert i appen, ikkje offisielle tal frå Skatteetaten.';overview.appendChild(disclaimer);
+ };
+ getCard.onclick=()=>{
+  frikortOverviewOpen=true;
+  redrawOverview();
+  [...result.children].forEach(el=>{if(el!==overview)el.hidden=true});
+  overview.hidden=false;
+  refreshVisibleFrikort=redrawOverview;
+  $('frikortBirthYear').closest('.field').hidden=true;
+  $('frikortCheck').hidden=true;
+  $('frikortReveal').textContent='↩ Sjekk frikort på nytt';
+ };
+ const note=document.createElement('p');note.className='small';note.textContent='Hugs å ta med andre skattepliktige inntekter og feriepengar. Har du fleire arbeidsgivarar, må frikortet fordelast hos Skatteetaten. Om du ventar meir enn frikortgrensa i '+currentYear+', treng du skattekort.';result.appendChild(note);
+}
+$('frikortCheck').onclick=updateFrikort;
+function renderSalary(){
+ checkFrikortYearChange();
+ $('salaryMonthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(salaryMonth);
+ renderEmployerList();
+ const entries=salaryMonthEntries(),total=entries.reduce((sum,x)=>sum+x.amount,0);
+ $('salaryTotal').textContent=fmt(total);
+ const selectedYear=salaryMonth.getFullYear();
+ $('salaryYearLabel').textContent=selectedYear;
+ $('salaryYearTotal').textContent=fmt(salaryEntries.filter(x=>x.date&&x.date.startsWith(String(selectedYear)+'-')&&x.date.slice(0,7)<=String(selectedYear)+'-'+String(salaryMonth.getMonth()+1).padStart(2,'0')).reduce((sum,x)=>sum+Number(x.amount||0),0));
+ const companies=new Map();entries.forEach(x=>companies.set(x.employer,(companies.get(x.employer)||0)+x.amount));
+ $('salaryCount').textContent=companies.size+' bedrifter';
+ const companyHost=$('salaryCompanies');companyHost.replaceChildren();
+ if(!companies.size){const e=document.createElement('div');e.className='empty';e.textContent='Ingen lønn registrert denne månaden.';companyHost.append(e)}
+ [...companies.entries()].sort((a,b)=>b[1]-a[1]).forEach(([name,amount])=>{const e=document.createElement('div');e.className='transaction';const left=document.createElement('strong');left.textContent=name;const right=document.createElement('strong');right.textContent=fmt(amount);e.append(left,right);companyHost.append(e)});
+ const host=$('salaryHistory');host.replaceChildren();
+ if(!entries.length){const e=document.createElement('div');e.className='empty';e.textContent='Trykk «Legg til lønn» for å registrere ei utbetaling.';host.append(e)}
+ entries.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(x=>{
+  const e=document.createElement('div');e.className='transaction';
+  const info=document.createElement('div');info.className='tx-main';
+  const title=document.createElement('div');title.className='salary-company';title.textContent=x.employer;
+  const details=document.createElement('div');details.className='tx-date';details.textContent=new Intl.DateTimeFormat('nn-NO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(x.date+'T12:00:00'))+(x.note?' · '+x.note:'');
+  info.append(title,details);
+  const amount=document.createElement('strong');amount.className='tx-amount';amount.textContent=fmt(x.amount);
+  const remove=document.createElement('button');remove.type='button';remove.className='danger';remove.textContent='×';remove.setAttribute('aria-label','Slett lønn');remove.onclick=()=>{if(confirm('Vil du slette denne lønnsregistreringa?')){salaryEntries=salaryEntries.filter(y=>y.id!==x.id);saveSalary();renderSalary()}};
+  e.append(info,amount,remove);host.append(e);
+ });
+
+}
+function switchView(view){
+ const salary=view==='salary',owed=view==='owed',expenses=view==='expenses';
+ $('expensesView').hidden=!expenses;$('salaryView').hidden=!salary;$('owedView').hidden=!owed;
+ for(const [id,on] of [['expensesTab',expenses],['salaryTab',salary],['owedTab',owed]]){$(id).classList.toggle('active',on);$(id).setAttribute('aria-selected',String(on))}
+ if(salary)renderSalary();else if(owed)renderOwed();else render();window.scrollTo(0,0)
+}
+$('expensesTab').onclick=()=>switchView('expenses');$('salaryTab').onclick=()=>switchView('salary');$('owedTab').onclick=()=>switchView('owed');
+$('salaryPrev').onclick=()=>{salaryMonth.setMonth(salaryMonth.getMonth()-1);renderSalary()};
+$('salaryNext').onclick=()=>{salaryMonth.setMonth(salaryMonth.getMonth()+1);renderSalary()};
+function openSalaryForm(preselected){refreshSalaryEmployers();if(preselected){$('salarySavedEmployer').value=preselected;updateEmployerChoice()}const now=new Date();const date=new Date(salaryMonth.getFullYear(),salaryMonth.getMonth(),Math.min(now.getDate(),new Date(salaryMonth.getFullYear(),salaryMonth.getMonth()+1,0).getDate()));$('salaryDate').value=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');show('salaryModal')}
+$('addSalaryBtn').onclick=()=>openSalaryForm();
+$('salaryForm').onsubmit=e=>{e.preventDefault();const employer=($('salarySavedEmployer').value==='__new__'?$('salaryEmployer').value:$('salarySavedEmployer').value).trim(),amount=Number($('salaryAmount').value),date=$('salaryDate').value;if(!employer||!Number.isFinite(amount)||amount<=0||!/^\d{4}-\d{2}-\d{2}$/.test(date))return;rememberSalaryEmployer(employer);salaryEntries.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),employer,amount,date,note:$('salaryNote').value.trim()});saveSalary();e.target.reset();hideAll();renderSalary()};
+
+const OWED_KEY='min-okonomi-owed-v1';
+const OWED_PEOPLE_KEY='min-okonomi-owed-people-v1';
+function loadOwedPeople(){try{const a=JSON.parse(localStorage.getItem(OWED_PEOPLE_KEY));return Array.isArray(a)?a.filter(x=>typeof x==='string'):[]}catch(e){return []}}
+let owedPeople=loadOwedPeople();
+function rememberOwedPerson(name){if(!owedPeople.some(x=>x.toLocaleLowerCase('nb-NO')===name.toLocaleLowerCase('nb-NO'))){owedPeople.push(name);localStorage.setItem(OWED_PEOPLE_KEY,JSON.stringify(owedPeople))}}
+function refreshOwedPeople(){const select=$('owedSavedPerson');select.replaceChildren();const first=document.createElement('option');first.value='';first.textContent='＋ Ny person / skriv namn under';select.append(first);const names=[...new Set([...owedPeople,...owedEntries.map(x=>x.person).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'nb-NO'));for(const name of names){const opt=document.createElement('option');opt.value=name;opt.textContent=name;select.append(opt)}select.value=''}
+$('owedSavedPerson').onchange=()=>{if($('owedSavedPerson').value)$('owedPerson').value=$('owedSavedPerson').value};
+function loadOwed(){try{const a=JSON.parse(localStorage.getItem(OWED_KEY));return Array.isArray(a)?a:[]}catch(e){return []}}
+let owedEntries=loadOwed();
+function saveOwed(){localStorage.setItem(OWED_KEY,JSON.stringify(owedEntries))}
+let owedMonth=new Date();owedMonth.setDate(1);owedMonth.setHours(0,0,0,0);
+$('owedPrev').onclick=()=>{owedMonth.setMonth(owedMonth.getMonth()-1);renderOwed()};
+$('owedNext').onclick=()=>{owedMonth.setMonth(owedMonth.getMonth()+1);renderOwed()};
+function renderOwed(){
+ $('owedMonthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(owedMonth);
+ const selectedMonth=owedMonth.getFullYear()+'-'+String(owedMonth.getMonth()+1).padStart(2,'0');
+ // Ubetalte registreringar blir vidareførte til alle seinare månader utan duplikat.
+ // Betalte registreringar blir berre viste i månaden dei vart registrerte.
+ const monthEntries=owedEntries.filter(x=>{
+  const entryMonth=String(x.recordedDate||'').slice(0,7);
+  return x.status==='received'?entryMonth===selectedMonth:entryMonth<=selectedMonth;
+ });
+ const pending=monthEntries.filter(x=>x.status!=='received');
+ $('owedTotal').textContent=fmt(pending.reduce((n,x)=>n+Number(x.amount||0),0));
+ for(const [hostId,entries] of [['owedPending',pending],['owedReceived',monthEntries.filter(x=>x.status==='received')]]){
+  const host=$(hostId);host.replaceChildren();
+  if(!entries.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=hostId==='owedPending'?'Ingen ubetalte beløp fram til denne månaden.':'Ingen registrerte som fått denne månaden.';host.append(empty);continue}
+  entries.forEach(x=>{
+   const item=document.createElement('div');item.className='owed-item';
+   const info=document.createElement('div');info.style.flex='1';
+   const name=document.createElement('strong');name.textContent=x.person;
+   const amount=document.createElement('div');amount.style.marginTop='4px';amount.textContent=fmt(Number(x.amount));
+   if(x.splitCount>1){const split=document.createElement('div');split.className='small';split.textContent='Delt '+fmt(Number(x.originalAmount))+' på '+x.splitCount+' personar · denne personen sin del: '+fmt(Number(x.amount));info.append(name,amount,split);}
+   const recorded=document.createElement('div');recorded.className='small';recorded.textContent='Lagt inn: '+(x.recordedDate?new Intl.DateTimeFormat('nb-NO',{day:'2-digit',month:'2-digit',year:'numeric',timeZone:'UTC'}).format(new Date(x.recordedDate+'T12:00:00Z')):'Dato ikkje registrert');
+   const note=document.createElement('div');note.className='small';note.textContent=x.note||'';
+   const status=document.createElement('div');status.className='status-pill';status.textContent=x.status==='received'?'Status: Fått':'Status: Ikkje fått';
+   const actions=document.createElement('div');actions.className='owed-actions';
+   const toggle=document.createElement('button');toggle.type='button';toggle.className='secondary';toggle.textContent=x.status==='received'?'↩ Merk som ikkje fått':'✓ Merk som fått';toggle.onclick=()=>{x.status=x.status==='received'?'pending':'received';saveOwed();renderOwed()};
+   const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='Slett';del.onclick=()=>{if(confirm('Vil du slette denne registreringa?')){owedEntries=owedEntries.filter(y=>y.id!==x.id);saveOwed();renderOwed()}};
+   const edit=document.createElement('button');edit.type='button';edit.className='secondary';edit.textContent='✏️ Rediger';edit.onclick=()=>openOwedEdit(x);
+   actions.append(edit,toggle,del);if(!x.splitCount)info.append(name,amount);info.append(recorded,note,status,actions);item.append(info);host.append(item);
+  });
+ }
+}
+function updateOwedSplit(){
+ const on=$('owedSplit').checked;
+ $('owedSplitFields').hidden=!on;
+ $('owedSplitCount').required=on;
+ const total=Number($('owedAmount').value),count=Number($('owedSplitCount').value);
+ const me=on&&$('owedSplitMe').checked;
+ $('owedSplitPreview').textContent=on&&Number.isFinite(total)&&total>0&&Number.isInteger(count)&&count>=2&&count<=1000?'Det blir '+(count-(me?1:0))+' registreringar'+(me?' (din del blir ikkje registrert)':'')+'. Omtrent '+fmt(Math.round(total/count*100)/100)+' per person. Du kan endre namna etter lagring.':'';
+}
+$('owedSplit').addEventListener('change',updateOwedSplit);
+$('owedAmount').addEventListener('input',updateOwedSplit);
+$('owedSplitCount').addEventListener('input',updateOwedSplit);
+$('owedSplitMe').addEventListener('change',updateOwedSplit);
+let editingOwedId=null;
+function setOwedEditing(isEditing){
+ $('owedModalTitle').textContent=isEditing?'Rediger registrering':'Legg til pengar du ventar på';
+ $('owedSaveBtn').textContent=isEditing?'Lagre endringar':'Lagre';
+ $('owedSplit').closest('.field').hidden=isEditing;
+ if(isEditing)$('owedSplit').checked=false;
+ updateOwedSplit();
+}
+function openOwedEdit(x){
+ editingOwedId=x.id;
+ refreshOwedPeople();$('owedForm').reset();setOwedEditing(true);
+ $('owedPerson').value=x.person||'';
+ $('owedAmount').value=Number(x.amount)||'';
+ $('owedDate').value=x.recordedDate||'';
+ $('owedNote').value=x.note||'';
+ $('owedStatus').value=x.status==='received'?'received':'pending';
+ show('owedModal');
+}
+$('addOwedBtn').onclick=()=>{editingOwedId=null;refreshOwedPeople();$('owedForm').reset();setOwedEditing(false);const now=new Date();$('owedDate').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');show('owedModal')};
+$('owedForm').onsubmit=e=>{
+ e.preventDefault();
+ const person=$('owedPerson').value.trim(),amount=Number($('owedAmount').value),recordedDate=$('owedDate').value;
+ const split=$('owedSplit').checked,count=split?Number($('owedSplitCount').value):1;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(recordedDate)||!person||!Number.isFinite(amount)||amount<=0||(split&&(!Number.isInteger(count)||count<2||count>1000)))return;
+ const note=$('owedNote').value.trim(),status=$('owedStatus').value;
+ if(editingOwedId!==null){
+  const entry=owedEntries.find(x=>x.id===editingOwedId);
+  if(!entry){alert('Fann ikkje registreringa.');return;}
+  if(Math.round(Number(entry.amount)*100)!==Math.round(amount*100)){
+   // Når ein enkelt del blir endra, er ikkje den gamle delingssummen lenger gyldig.
+   delete entry.originalAmount;delete entry.splitCount;delete entry.splitIndex;
+  }
+  Object.assign(entry,{person,amount,recordedDate,note,status});
+  rememberOwedPerson(person);saveOwed();editingOwedId=null;
+  e.target.reset();hideAll();renderOwed();return;
+ }
+ const makeId=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random();
+ rememberOwedPerson(person);
+ if(split){
+  // Del i heile øre slik at alle registreringane til saman blir nøyaktig totalsummen.
+  const totalCents=Math.round(amount*100),base=Math.floor(totalCents/count),remainder=totalCents%count;
+  const excludeMe=$('owedSplitMe').checked;
+  for(let i=0;i<count;i++){
+   if(excludeMe&&i===count-1)continue; // Siste del er din og skal ikkje førast som pengar du ventar på.
+   const name=i===0?person:'Person '+(i+1);
+   owedEntries.push({id:makeId(),person:name,amount:(base+(i<remainder?1:0))/100,originalAmount:amount,splitCount:count,splitIndex:i+1,recordedDate,note,status});
+  }
+ }else{
+  owedEntries.push({id:makeId(),person,amount,recordedDate,note,status});
+ }
+ saveOwed();e.target.reset();hideAll();renderOwed();
+};
+function inMonth(t){const d=new Date(t.createdAt);return d.getFullYear()===viewedMonth.getFullYear()&&d.getMonth()===viewedMonth.getMonth()}
+function monthTx(){return state.transactions.filter(inMonth)}
+function budgetFor(id){const a=state.accounts.find(x=>x.id===id);return Number(a?.budget)||0}
+function budgetBar(amount,limit){const over=amount>limit;return `<div class="budget-track"><div class="budget-fill ${over?'over':''}" style="width:${Math.min(100,amount/limit*100)}%"></div></div><div class="budget-meta"><span>${Math.round(amount/limit*100)} % brukt</span><span style="color:${over?'#ff8585':'#62d6a6'}">${over?fmt(amount-limit)+' over budsjett':fmt(limit-amount)+' igjen'}</span></div>`}
+const dateFmt=s=>new Intl.DateTimeFormat('nb-NO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(s));
+function totalFor(id){return monthTx().filter(t=>id==='all'||t.accountId===id).reduce((a,t)=>a+t.amount,0)}
+function deleteExpenseAccount(id){
+ const account=state.accounts.find(a=>a.id===id);if(!account)return;
+ const count=state.transactions.filter(t=>t.accountId===id).length;
+ const message='Vil du slette kontoen «'+account.name+'»?\n\nDette slettar også '+count+' registrerte utgifter på kontoen, utgiftstypar, faste prisar, butikkar og stader. Dette kan ikkje angrast.\n\nLønn og Pengar igjen blir ikkje påverka.';
+ if(!confirm(message))return;
+ // Ekstra stadfesting for å unngå utilsikta tap av økonomidata.
+ if(!confirm('Er du heilt sikker på at du vil slette «'+account.name+'» og alle utgiftene på kontoen?'))return;
+ state.accounts=state.accounts.filter(a=>a.id!==id);
+ state.transactions=state.transactions.filter(t=>t.accountId!==id);
+ delete expenseTypesByAccount[id];saveExpenseTypes();
+ delete shopPresets[id];saveShopPresets();
+ if(selected===id)selected='all';
+ save();render();
+}
+$('resetAllData').onclick=()=>{
+ const first='Vil du tilbakestille HEILE Min økonomi?\n\nAlle kontoar, utgifter, budsjett, utgiftstypar, butikkar, lønnsregistreringar og Pengar igjen blir sletta. Dette kan ikkje angrast.';
+ if(!confirm(first))return;
+ if(!confirm('SISTE ÅTVARING: Er du heilt sikker på at ALT skal slettast permanent?'))return;
+ const keys=[KEY,HEADING_KEY,EXPENSE_TYPES_KEY,ACCOUNT_EXPENSE_TYPES_KEY,SHOP_PRESETS_KEY,SALARY_KEY,SALARY_EMPLOYERS_KEY,OWED_KEY,OWED_PEOPLE_KEY,'min-okonomi-all-stats-mode'];
+ keys.forEach(key=>localStorage.removeItem(key));
+ location.reload();
+};
+let allStatsMode=localStorage.getItem('min-okonomi-all-stats-mode')==='pie'?'pie':localStorage.getItem('min-okonomi-all-stats-mode')==='vertical'?'vertical':'bar';
+$('allStatsBarBtn').onclick=()=>{allStatsMode='bar';localStorage.setItem('min-okonomi-all-stats-mode',allStatsMode);render()};
+$('allStatsVerticalBtn').onclick=()=>{allStatsMode='vertical';localStorage.setItem('min-okonomi-all-stats-mode',allStatsMode);render()};
+$('allStatsPieBtn').onclick=()=>{allStatsMode='pie';localStorage.setItem('min-okonomi-all-stats-mode',allStatsMode);render()};
+function render(){
+ $('monthLabel').textContent=new Intl.DateTimeFormat('nn-NO',{month:'long',year:'numeric'}).format(viewedMonth);
+ $('grandTotal').textContent=fmt(totalFor('all'));
+ $('totalHint').textContent=monthTx().length+' registreringar denne månaden';
+ $('allExpenseStatsMonth').textContent=$('monthLabel').textContent;
+ $('allStatsBarBtn').classList.toggle('active',allStatsMode==='bar');
+ $('allStatsVerticalBtn').classList.toggle('active',allStatsMode==='vertical');
+ $('allStatsPieBtn').classList.toggle('active',allStatsMode==='pie');
+ $('allStatsBarBtn').setAttribute('aria-pressed',String(allStatsMode==='bar'));
+ $('allStatsVerticalBtn').setAttribute('aria-pressed',String(allStatsMode==='vertical'));
+ $('allStatsPieBtn').setAttribute('aria-pressed',String(allStatsMode==='pie'));
+ const statsHost=$('allExpenseStats');statsHost.innerHTML='';
+ const totalAll=totalFor('all');
+ if(!state.accounts.length||!monthTx().length){
+  const empty=document.createElement('div');empty.className='small';empty.textContent='Ingen utgifter registrerte denne månaden.';statsHost.appendChild(empty);
+ }else{
+  const colors=['#a78bfa','#62d6a6','#f6bd60','#6ec5ff','#ff8585','#d68cff'];
+  if(allStatsMode==='pie'&&totalAll>0){
+   const positive=state.accounts.map((account,i)=>({account,amount:totalFor(account.id),color:colors[i%colors.length]})).filter(x=>x.amount>0);
+   let degrees=0;
+   const stops=positive.map(x=>{const from=degrees;degrees+=x.amount/totalAll*360;return x.color+' '+from+'deg '+degrees+'deg'});
+   const circle=document.createElement('div');
+   circle.style.cssText='width:min(220px,75vw);height:min(220px,75vw);border-radius:50%;margin:8px auto 20px;position:relative;background:conic-gradient('+stops.join(',')+');';
+   circle.setAttribute('role','group');
+   circle.setAttribute('aria-label','Trykk på ein farge i sektordiagrammet for å sjå kontoen');
+   circle.style.cursor='pointer';
+   const detail=document.createElement('div');
+   detail.style.cssText='text-align:center;background:#252332;border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 14px';
+   detail.textContent='👆 Trykk på ein farge for å sjå kva konto det er.';
+   const showSlice=(item)=>{
+    detail.innerHTML='';
+    const colorRow=document.createElement('div');colorRow.style.cssText='display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:8px';
+    const swatch=document.createElement('span');swatch.style.cssText='display:inline-block;width:24px;height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:'+item.color;
+    const colorName=document.createElement('strong');
+    const colorNames={'#a78bfa':'Lilla','#62d6a6':'Grøn','#f6bd60':'Gul/oransje','#6ec5ff':'Blå','#ff8585':'Raud/rosa','#d68cff':'Rosa/lilla'};
+    colorName.textContent='Farge: '+(colorNames[item.color]||item.color);
+    colorRow.append(swatch,colorName);
+    const title=document.createElement('div');title.textContent='Konto: '+item.account.emoji+' '+item.account.name;
+    const amount=document.createElement('div');amount.style.cssText='margin-top:5px;font-size:18px;font-weight:700';amount.textContent='Sum: '+fmt(item.amount);
+    const percent=document.createElement('div');percent.className='small';percent.textContent=(item.amount/totalAll*100).toLocaleString('nb-NO',{maximumFractionDigits:1})+' % av alle utgifter';
+    detail.append(colorRow,title,amount,percent);
+   };
+   circle.addEventListener('click',event=>{
+    const rect=circle.getBoundingClientRect();
+    const x=event.clientX-(rect.left+rect.width/2);
+    const y=event.clientY-(rect.top+rect.height/2);
+    if(Math.hypot(x,y)>rect.width/2)return;
+    const angle=(Math.atan2(y,x)*180/Math.PI+90+360)%360;
+    let running=0;
+    const item=positive.find(item=>{running+=item.amount/totalAll*360;return angle<running+0.00001});
+    if(item)showSlice(item);
+   });
+   statsHost.append(circle,detail);
+  }
+  if(allStatsMode==='vertical'&&totalAll>0){
+   const items=state.accounts.map((account,i)=>({account,amount:totalFor(account.id),color:colors[i%colors.length]})).filter(x=>x.amount>0);
+   const maxAmount=Math.max(...items.map(x=>x.amount));
+   const chart=document.createElement('div');chart.style.cssText='display:flex;align-items:flex-end;gap:12px;overflow-x:auto;min-height:245px;padding:12px 2px 8px;border-bottom:1px solid var(--line);margin-bottom:15px';
+   items.forEach(item=>{
+    const col=document.createElement('div');col.style.cssText='flex:1 0 65px;min-width:65px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px';
+    const amountLabel=document.createElement('span');amountLabel.className='small';amountLabel.textContent=fmt(item.amount);
+    const bar=document.createElement('div');bar.style.cssText='width:65%;min-height:4px;height:'+Math.max(4,Math.round(item.amount/maxAmount*155))+'px;background:'+item.color+';border-radius:7px 7px 0 0';
+    const name=document.createElement('span');name.className='small';name.style.cssText='text-align:center;overflow-wrap:anywhere';name.textContent=item.account.emoji+' '+item.account.name;
+    col.append(amountLabel,bar,name);chart.appendChild(col);
+   });
+   statsHost.appendChild(chart);
+  }
+  state.accounts.forEach((account,i)=>{
+   const amount=totalFor(account.id);
+   if(amount<=0)return;
+   const line=document.createElement('div');line.style.marginBottom='14px';
+   const heading=document.createElement('div');heading.className='row';heading.style.marginBottom='6px';
+   const name=document.createElement('span');name.textContent=account.emoji+' '+account.name;
+   const value=document.createElement('strong');value.textContent=fmt(amount)+' ('+Math.round(amount/totalAll*100)+' %)';
+   heading.append(name,value);
+   const track=document.createElement('div');track.style.cssText='height:10px;background:#30313b;border-radius:999px;overflow:hidden';
+   const fill=document.createElement('div');fill.style.cssText='height:100%;border-radius:999px;width:'+Math.min(100,amount/totalAll*100)+'%;background:'+colors[i%colors.length];
+   track.appendChild(fill);
+   if(allStatsMode==='bar')line.append(heading,track);
+   else{
+    const dot=document.createElement('span');dot.style.cssText='display:inline-block;width:11px;height:11px;border-radius:50%;background:'+colors[i%colors.length]+';margin-right:7px';
+    name.prepend(dot);line.append(heading);
+   }
+   statsHost.appendChild(line);
+  });
+  const footer=document.createElement('div');footer.className='row';footer.style.cssText='border-top:1px solid var(--line);padding-top:12px';
+  const label=document.createElement('strong');label.textContent='Totalt alle kontoar';
+  const amount=document.createElement('strong');amount.textContent=fmt(totalAll);
+  footer.append(label,amount);statsHost.appendChild(footer);
+ }
+
+ const allBudget=state.accounts.reduce((n,a)=>n+budgetFor(a.id),0);$('overallBudget').innerHTML=allBudget?'<div style="margin-top:15px"><div class="small">Samla månadsbudsjett: '+fmt(allBudget)+'</div>'+budgetBar(totalFor('all'),allBudget)+'</div>':'';
+ const host=$('accounts');host.innerHTML='';
+ state.accounts.forEach(a=>{
+  const b=document.createElement('button');b.className='account'+(selected===a.id?' active':'');
+  b.innerHTML=`<div class="emoji">${a.emoji}</div><div class="name"></div><div class="amount">${fmt(totalFor(a.id))}</div><div class="count">${monthTx().filter(t=>t.accountId===a.id).length} registreringar</div>`;
+  b.querySelector('.name').textContent=a.name+(a.shopType?' · '+(a.shopType==='daglegvare'?'Daglegvare':'Butikk'):'');b.onclick=()=>{selected=selected===a.id?'all':a.id;render()};host.appendChild(b);
+
+ });
+ const hasChosenAccount=selected!=='all'&&state.accounts.some(a=>a.id===selected);
+ $('allExpenseStatsSection').hidden=false;
+ $('chartStatsSection').hidden=!hasChosenAccount;
+ $('expenseTypesSection').hidden=!hasChosenAccount;
+ $('accountHistorySection').hidden=!hasChosenAccount;
+ $('deleteAccountPanel').style.display=hasChosenAccount?'':'none';
+ const deleteButton=$('deleteSelectedAccount');
+ const activeAccount=state.accounts.find(a=>a.id===selected);
+ deleteButton.disabled=!activeAccount;
+ deleteButton.textContent=activeAccount?'🗑 Slett konto: '+activeAccount.name:'🗑 Slett konto';
+ $('deleteAccountHint').textContent=activeAccount?'Berre den valde kontoen blir sletta.':'Vel ein konto ovanfor for å kunne slette han.';
+ deleteButton.onclick=()=>{if(activeAccount)deleteExpenseAccount(activeAccount.id)};
+ const budgets=$('budgetOverview');budgets.innerHTML='';if(!state.accounts.length)budgets.innerHTML='<div class="empty">Opprett ein konto for å setje budsjett.</div>';state.accounts.forEach(a=>{const limit=budgetFor(a.id),used=totalFor(a.id),el=document.createElement('div');el.style.padding='9px 0';el.innerHTML='<div class="row"><strong></strong><button class="budget-edit">'+(limit?'Endre':'Set budsjett')+'</button></div>'+(limit?'<div class="small">'+fmt(used)+' av '+fmt(limit)+'</div>'+budgetBar(used,limit):'<div class="small">Ikkje sett noko maksbeløp enno</div>');el.querySelector('strong').textContent=a.emoji+' '+a.name;el.querySelector('button').onclick=()=>openBudget(a.id);budgets.appendChild(el)});
+ const add=document.createElement('button');add.className='add-tile';add.innerHTML='＋<br>Opprett ny konto';add.onclick=openAccount;host.appendChild(add);
+ $('chartSub').textContent=selected==='all'?'Alle kontoar':(state.accounts.find(a=>a.id===selected)?.name||'Alle kontoar');
+ $('historyTitle').textContent=selected==='all'?'Siste registreringar':'Registreringar · '+(state.accounts.find(a=>a.id===selected)?.name||'');
+ const txs=monthTx().filter(t=>selected==='all'||t.accountId===selected).sort((a,b)=>b.createdAt-a.createdAt);
+ const h=$('history');h.innerHTML='';
+ if(!txs.length){h.innerHTML='<div class="empty">Her kjem registreringane dine når du legg til beløp.</div>'}
+ txs.slice(0,100).forEach(t=>{
+  const acc=state.accounts.find(a=>a.id===t.accountId);const el=document.createElement('div');el.className='transaction';
+  el.innerHTML=`<div class="tx-icon">${acc?.emoji||'💰'}</div><div class="tx-main"><div class="tx-title"></div><div class="tx-date">${dateFmt(t.createdAt)} · ${acc?.name||'Sletta konto'}</div></div><div class="tx-amount">${fmt(t.amount)}</div><button class="secondary edit-tx" title="Rediger registrering" aria-label="Rediger registrering" style="padding:7px 10px">✏️</button><button class="danger delete-tx" title="Slett registrering" aria-label="Slett registrering">×</button>`;
+  el.querySelector('.tx-title').textContent=(t.shop?t.shop+(t.shopLocation?' ('+t.shopLocation+')':'')+' · ':'')+(t.note||acc?.name||'Forbruk');
+  el.querySelector('.edit-tx').onclick=()=>editExpense(t.id);
+  el.querySelector('.delete-tx').onclick=()=>{if(confirm('Vil du slette denne registreringa?')){state.transactions=state.transactions.filter(x=>x.id!==t.id);save();render()}};
+  h.appendChild(el);
+ });
+ const bsel=$('budgetAccount');bsel.innerHTML='';state.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.emoji+' '+a.name;bsel.appendChild(o)});
+ const sel=$('amountAccount');sel.innerHTML='';
+ state.accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=a.emoji+' '+a.name;sel.appendChild(o)});
+ $('addAmountBtn').disabled=!state.accounts.length;$('addAmountBtn').style.opacity=state.accounts.length?1:.5;
+ renderExpenseTypes();
+ renderShopPresets();
+ drawChart();
+}
+function drawChart(){
+ const c=$('chart'),ctx=c.getContext('2d'),rect=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ c.width=rect.width*dpr;c.height=rect.height*dpr;ctx.scale(dpr,dpr);
+ const w=rect.width,h=rect.height;ctx.clearRect(0,0,w,h);
+ const colors=['#a78bfa','#62d6a6','#f6bd60','#6ec5ff','#ff8585','#d68cff','#f18ab5','#a6d17b'];
+ const data=(selected==='all'?state.accounts.map(a=>({label:a.name,value:totalFor(a.id)})):monthTx().filter(t=>t.accountId===selected).reduce((m,t)=>{const day=new Date(t.createdAt).getDate();m[day]=(m[day]||0)+t.amount;return m},{}));const chartData=Array.isArray(data)?data:Object.entries(data).map(([day,value])=>({label:day+'.',value}));
+ $('legend').innerHTML='';
+ if(!chartData.length){ctx.fillStyle='#a4a9b5';ctx.font='13px system-ui';ctx.textAlign='center';ctx.fillText('Legg til beløp for å sjå statistikk',w/2,h/2);return}
+ chartData.forEach((x,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:${colors[i%colors.length]}"></i>`;s.append(document.createTextNode(x.label));$('legend').appendChild(s)});
+ if(chartType==='pie'){
+  const sum=chartData.reduce((a,x)=>a+x.value,0);let start=-Math.PI/2;const r=Math.min(w,h)*.37,cx=w/2,cy=h/2;
+  chartData.forEach((x,i)=>{const end=start+x.value/sum*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,end);ctx.closePath();ctx.fillStyle=colors[i%colors.length];ctx.fill();start=end});
+  ctx.fillStyle='#f4f5f7';ctx.textAlign='center';ctx.font='bold 17px system-ui';ctx.fillText(fmt(sum),cx,cy+5);return;
+ }
+ const pad={l:42,r:12,t:15,b:38},cw=w-pad.l-pad.r,ch=h-pad.t-pad.b,max=Math.max(...chartData.map(x=>x.value))*1.15||1;
+ ctx.strokeStyle='#30343e';ctx.lineWidth=1;ctx.fillStyle='#a4a9b5';ctx.font='10px system-ui';ctx.textAlign='right';
+ for(let i=0;i<=4;i++){let y=pad.t+ch*i/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(Math.round(max*(1-i/4)).toString(),pad.l-7,y+3)}
+ const points=chartData.map((x,i)=>({x:pad.l+(i+.5)*cw/chartData.length,y:pad.t+ch-(x.value/max)*ch,v:x.value}));
+ if(chartType==='line'&&points.length>1){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.strokeStyle='#a78bfa';ctx.lineWidth=3;ctx.stroke();points.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#a78bfa';ctx.fill()})}
+ else points.forEach((p,i)=>{const bw=Math.min(42,cw/chartData.length*.55);ctx.fillStyle=colors[i%colors.length];ctx.beginPath();ctx.roundRect(p.x-bw/2,p.y,bw,pad.t+ch-p.y,[5,5,0,0]);ctx.fill()});
+ ctx.textAlign='center';ctx.fillStyle='#a4a9b5';ctx.font='10px system-ui';
+ chartData.forEach((x,i)=>{let label=x.label.length>9?x.label.slice(0,8)+'…':x.label;ctx.fillText(label,points[i].x,h-13)});
+}
+function show(id){$(id).classList.add('show')}
+function hideAll(){document.querySelectorAll('.modal-backdrop').forEach(x=>x.classList.remove('show'))}
+function openBudget(id){if(!state.accounts.length){openAccount();return}const chosen=id||selected!=='all'&&selected||state.accounts[0].id;$('budgetAccount').value=chosen;$('budgetValue').value=budgetFor(chosen)||'';show('budgetModal')}
+$('setBudgetBtn').onclick=()=>openBudget();$('budgetAccount').onchange=()=>{$('budgetValue').value=budgetFor($('budgetAccount').value)||''};$('budgetForm').onsubmit=e=>{e.preventDefault();const a=state.accounts.find(x=>x.id===$('budgetAccount').value);if(a){a.budget=Number($('budgetValue').value);save();hideAll();render()}};
+$('prevMonth').onclick=()=>{viewedMonth.setMonth(viewedMonth.getMonth()-1);render()};$('nextMonth').onclick=()=>{viewedMonth.setMonth(viewedMonth.getMonth()+1);render()};
+$('accountIsShop').onchange=()=>{$('accountShopTypeField').style.display=$('accountIsShop').value==='yes'?'block':'none'};
+function openAccount(){$('accountIsShop').value='no';$('accountShopTypeField').style.display='none';show('accountModal');setTimeout(()=>$('accountName').focus(),80)}
+let editingExpenseId=null;
+function editExpense(id){
+ const t=state.transactions.find(x=>x.id===id);if(!t)return;
+ editingExpenseId=id;
+ $('amountModalTitle').textContent='Rediger utgift';$('amountSubmit').textContent='Lagre endringar';
+ $('amountDateField').hidden=false;
+ $('amountAccount').value=t.accountId;renderAmountTypes();updateAmountShop();
+ $('amountValue').value=t.amount;$('amountNote').value=t.note||'';
+ if(t.shop)$('amountShop').value=t.shop;
+ if(t.shopLocation)$('amountShopLocation').value=t.shopLocation;
+ const d=new Date(t.createdAt);$('amountDate').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ show('amountModal');
+}
+function openAmount(){editingExpenseId=null;$('amountModalTitle').textContent='Legg til beløp';$('amountSubmit').textContent='Lagre beløp';$('amountDateField').hidden=true;if(!state.accounts.length){alert('Opprett ein konto først.');openAccount();return}if(selected!=='all'&&state.accounts.some(a=>a.id===selected))$('amountAccount').value=selected;$('amountNote').value='';$('amountValue').value='';renderAmountTypes();updateAmountShop();show('amountModal')}
+$('newAccountBtn').onclick=openAccount;$('addAmountBtn').onclick=openAmount;
+document.querySelectorAll('.close-modal').forEach(b=>b.onclick=hideAll);
+document.querySelectorAll('.modal-backdrop').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)hideAll()}));
+$('accountForm').onsubmit=e=>{e.preventDefault();const name=$('accountName').value.trim();if(!name)return;const id=crypto.randomUUID?crypto.randomUUID():String(Date.now());state.accounts.push({id,name,emoji:$('accountEmoji').value,shopType:$('accountIsShop').value==='yes'?$('accountShopType').value:null});selected=id;save();e.target.reset();hideAll();render()};
+$('amountForm').onsubmit=e=>{
+ e.preventDefault();const amount=Number($('amountValue').value);if(!(amount>0))return;
+ const accountId=$('amountAccount').value,note=$('amountNote').value.trim();
+ const shop=$('amountShopField').style.display==='none'?'':$('amountShop').value.trim();
+ const shopLocation=$('amountShopLocationField').style.display==='none'?'':$('amountShopLocation').value.trim();
+ if(editingExpenseId){
+  const t=state.transactions.find(x=>x.id===editingExpenseId);if(!t)return;
+  const date=$('amountDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+  const [year,month,day]=date.split('-').map(Number);
+  const old=new Date(t.createdAt);
+  const timestamp=new Date(year,month-1,day,old.getHours(),old.getMinutes(),old.getSeconds()).getTime();
+  if(!Number.isFinite(timestamp)||new Date(timestamp).getDate()!==day){alert('Ugyldig dato');return}
+  Object.assign(t,{accountId,amount,note,shop,shopLocation,createdAt:timestamp});
+ }else{
+  state.transactions.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),accountId,amount,note,shop,shopLocation,createdAt:(()=>{const now=new Date();if(now.getFullYear()===viewedMonth.getFullYear()&&now.getMonth()===viewedMonth.getMonth())return now.getTime();return new Date(viewedMonth.getFullYear(),viewedMonth.getMonth(),Math.min(now.getDate(),new Date(viewedMonth.getFullYear(),viewedMonth.getMonth()+1,0).getDate()),12).getTime()})()});
+ }
+ editingExpenseId=null;save();e.target.reset();hideAll();render();
+};
+document.querySelectorAll('[data-chart]').forEach(b=>b.onclick=()=>{chartType=b.dataset.chart;document.querySelectorAll('[data-chart]').forEach(x=>x.classList.toggle('active',x===b));drawChart()});
+window.addEventListener('resize',drawChart);migrateOldExpenseTypes();render();
+</script>
+</body>
+</html>
